@@ -17,5 +17,13 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
+    - name: Setup Gradle 8.0
+      uses: gradle/actions/setup-gradle@v2
+      with:
+        gradle-version: '8.0'
+
+    - name: Create wrapper with Gradle 7.4.2
+      run: gradle wrapper --gradle-version 7.4.2
+
     - name: Build APK
-      run: gradle -g /tmp/gradle wrapper --gradle-version 7.4.2 && ./gradlew assembleDebug
+      run: ./gradlew assembleDebug
