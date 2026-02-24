@@ -18,7 +18,4 @@ jobs:
         distribution: 'temurin'
 
     - name: Build APK
-      run: gradle assembleDebug
-
-    - name: Build Success
-      run: echo "✅ Build completed successfully!"
+      run: gradle -g /tmp/gradle wrapper --gradle-version 7.4.2 && ./gradlew assembleDebug
