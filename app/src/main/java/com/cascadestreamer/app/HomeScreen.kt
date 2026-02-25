@@ -1,6 +1,7 @@
 package com.cascadestreamer.app
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,7 +25,6 @@ fun HomeScreen(
             .background(Color.Black)
             .padding(16.dp)
     ) {
-        // Top Icon Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -48,7 +48,6 @@ fun HomeScreen(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // Recent Videos Section
         Text(
             "RECENT VIDEOS",
             fontSize = 18.sp,
@@ -58,7 +57,6 @@ fun HomeScreen(
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        // Playlists Section
         Text(
             "PLAYLISTS",
             fontSize = 18.sp,
