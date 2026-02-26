@@ -35,7 +35,7 @@ fun CascadeStreamerApp() {
         )
         
         Screen.SETTINGS -> SettingsScreen(
-            onAddUrl = { /* TODO: Open URL dialog */ },
+            appState = appState,
             onBack = { currentScreen.value = Screen.HOME },
             onQuality = { /* TODO: Quality settings */ }
         )
@@ -48,7 +48,8 @@ fun CascadeStreamerApp() {
             selectedVideo.value?.let { video ->
                 PlayerScreen(
                     video = video,
-                    onBack = { currentScreen.value = Screen.HOME }
+                    onBack = { currentScreen.value = Screen.HOME },
+                    appState = appState
                 )
             }
         }
@@ -58,7 +59,8 @@ fun CascadeStreamerApp() {
 @Composable
 fun PlayerScreen(
     video: Video,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    appState: AppState
 ) {
     androidx.compose.material3.Text(
         "Playing: ${video.title}",

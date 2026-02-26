@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -13,10 +15,12 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun SettingsScreen(
-    onAddUrl: () -> Unit,
+    appState: AppState,
     onBack: () -> Unit,
     onQuality: () -> Unit
 ) {
+    val showAddUrlDialog = remember { mutableStateOf(false) }
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -33,7 +37,7 @@ fun SettingsScreen(
         SettingItem(
             title = "Add Video URL",
             description = "Add a new video to play",
-            onClick = onAddUrl
+            onClick = { showAddUrlDialog.value = true }
         )
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -50,6 +54,20 @@ fun SettingsScreen(
             title = "Back",
             description = "Return to home",
             onClick = onBack
+        )
+    }
+    
+    if (showAddUrlDialog.value) {
+        AddUrlDialog(
+            onDismiss = { showAddUrlDialog.value = false },
+            onAddUrl = { url, title ->
+                val video = Video(
+                    id = System.currentTimeMillis().toString(),
+                    title = title,
+                    url = url
+                )
+                appState.addVideo(video)
+            }
         )
     }
 }
