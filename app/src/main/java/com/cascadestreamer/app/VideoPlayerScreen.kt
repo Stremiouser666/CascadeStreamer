@@ -1,6 +1,5 @@
 package com.cascadestreamer.app
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
@@ -14,26 +13,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
-import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 
 @Composable
 fun VideoPlayerScreen(
     video: Video,
+    quality: String,
     onBack: () -> Unit,
     appState: AppState
 ) {
     val context = LocalContext.current
     var exoPlayer by remember { mutableStateOf<ExoPlayer?>(null) }
     var isPlaying by remember { mutableStateOf(false) }
-    var currentPosition by remember { mutableStateOf(0L) }
     
     LaunchedEffect(Unit) {
         val player = ExoPlayer.Builder(context).build()
         exoPlayer = player
         
-        val mediaItem = MediaItem.fromUri(video.url)
+        val streamUrl = appState.getStreamUrl(video.url, quality)
+        val mediaItem = MediaItem.fromUri(streamUrl)
         player.setMediaItem(mediaItem)
         player.prepare()
         player.playWhenReady = true
@@ -66,14 +65,24 @@ fun VideoPlayerScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                video.title,
-                fontSize = 24.sp,
-                color = Color.White,
-                modifier = Modifier
-                    .background(Color.Black.copy(alpha = 0.7f))
-                    .padding(12.dp)
-            )
+            Column {
+                Text(
+                    video.title,
+                    fontSize = 24.sp,
+                    color = Color.White,
+                    modifier = Modifier
+                        .background(Color.Black.copy(alpha = 0.7f))
+                        .padding(12.dp)
+                )
+                Text(
+                    "Quality: $quality",
+                    fontSize = 14.sp,
+                    color = Color(0xFF64B5F6),
+                    modifier = Modifier
+                        .background(Color.Black.copy(alpha = 0.7f))
+                        .padding(12.dp)
+                )
+            }
             
             Row(
                 modifier = Modifier
@@ -98,8 +107,7 @@ fun VideoPlayerScreen(
                 
                 Button(onClick = {
                     exoPlayer?.let {
-                        val pos = it.currentPosition
-                        appState.updateVideoProgress(video.id, pos)
+                        appState.updateVideoProgress(video.id, it.currentPosition)
                     }
                     onBack()
                 }) {
