@@ -4,7 +4,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
 
 class AppState(
-    private val repository: VideoRepository = VideoRepository()
+    private val repository: VideoRepository = VideoRepository(),
+    private val ytDlpManager: YtDlpManager = YtDlpManager()
 ) {
     private val _videos = mutableStateOf<List<Video>>(emptyList())
     val videos: State<List<Video>> = _videos
@@ -18,6 +19,9 @@ class AppState(
     private val _currentPlaylist = mutableStateOf<Playlist?>(null)
     val currentPlaylist: State<Playlist?> = _currentPlaylist
     
+    private val _availableQualities = mutableStateOf<List<String>>(emptyList())
+    val availableQualities: State<List<String>> = _availableQualities
+    
     fun addVideo(video: Video) {
         repository.addVideo(video)
         _videos.value = repository.getVideos()
@@ -30,6 +34,7 @@ class AppState(
     
     fun playVideo(video: Video) {
         _currentVideo.value = video
+        _availableQualities.value = ytDlpManager.getAvailableQualities(video.url)
     }
     
     fun selectPlaylist(playlist: Playlist) {
@@ -44,5 +49,9 @@ class AppState(
                 if (v.id == videoId) updated else v
             }
         }
+    }
+    
+    fun getStreamUrl(videoUrl: String, quality: String): String {
+        return ytDlpManager.getStreamUrlForQuality(videoUrl, quality)
     }
 }
