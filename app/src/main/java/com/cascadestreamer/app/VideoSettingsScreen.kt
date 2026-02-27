@@ -3,6 +3,8 @@ package com.cascadestreamer.app
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,7 +45,7 @@ fun VideoSettingsScreen(
             .fillMaxSize()
             .background(Color.Black)
             .padding(32.dp)
-            .verticalScroll(androidx.compose.foundation.rememberScrollState())
+            .verticalScroll(rememberScrollState())
     ) {
         Text(
             "Video Settings",
@@ -52,7 +54,6 @@ fun VideoSettingsScreen(
             modifier = Modifier.padding(bottom = 32.dp)
         )
         
-        // Brightness
         VideoSliderSetting(
             label = "Brightness",
             value = brightness.value,
@@ -62,7 +63,6 @@ fun VideoSettingsScreen(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Contrast
         VideoSliderSetting(
             label = "Contrast",
             value = contrast.value,
@@ -72,7 +72,6 @@ fun VideoSettingsScreen(
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Saturation/Color
         VideoSliderSetting(
             label = "Color/Saturation",
             value = saturation.value,
@@ -82,7 +81,6 @@ fun VideoSettingsScreen(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // Aspect Ratio
         Text(
             "Aspect Ratio",
             fontSize = 16.sp,
@@ -106,7 +104,6 @@ fun VideoSettingsScreen(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // Custom Width/Height
         if (aspectRatio.value == AspectRatio.CUSTOM) {
             VideoSliderSetting(
                 label = "Width Adjustment",
