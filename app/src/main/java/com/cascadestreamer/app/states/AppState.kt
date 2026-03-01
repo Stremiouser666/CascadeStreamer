@@ -2,6 +2,10 @@ package com.cascadestreamer.app.states
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
+import com.cascadestreamer.app.data.Video
+import com.cascadestreamer.app.data.VideoRepository
+import com.cascadestreamer.app.data.Playlist
+import com.cascadestreamer.app.managers.YtDlpManager
 
 class AppState(
     private val repository: VideoRepository = VideoRepository(),

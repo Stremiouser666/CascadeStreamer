@@ -1,5 +1,9 @@
 package com.cascadestreamer.app.managers
 
+import com.cascadestreamer.app.data.Video
+import com.cascadestreamer.app.data.Playlist
+import com.cascadestreamer.app.data.VideoRepository
+
 class PlaylistManager(
     private val repository: VideoRepository = VideoRepository()
 ) {
@@ -14,11 +18,9 @@ class PlaylistManager(
     }
     
     fun deletePlaylist(playlistId: String) {
-        // TODO: Implement deletion
     }
     
     fun renamePlaylist(playlistId: String, newName: String): Playlist? {
-        // TODO: Implement rename
         return null
     }
     

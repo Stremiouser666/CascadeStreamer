@@ -3,6 +3,13 @@ package com.cascadestreamer.app
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import com.cascadestreamer.app.data.Video
+import com.cascadestreamer.app.states.AppState
+import com.cascadestreamer.app.ui.HomeScreen
+import com.cascadestreamer.app.ui.SettingsScreen
+import com.cascadestreamer.app.ui.InfoScreen
+import com.cascadestreamer.app.ui.VideoPlayerScreen
+import com.cascadestreamer.app.ui.QualitySelectionScreen
 
 enum class Screen {
     HOME, SETTINGS, INFO, PLAYER, QUALITY
