@@ -1,5 +1,7 @@
 package com.cascadestreamer.app.ui
 
+import com.cascadestreamer.app.managers.AudioPreferences
+import com.cascadestreamer.app.managers.CompressionLevel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

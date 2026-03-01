@@ -1,5 +1,6 @@
 package com.cascadestreamer.app.ui
 
+import com.cascadestreamer.app.managers.PlaylistExtractor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

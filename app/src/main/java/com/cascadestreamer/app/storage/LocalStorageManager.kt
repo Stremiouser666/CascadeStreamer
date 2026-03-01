@@ -1,5 +1,12 @@
 package com.cascadestreamer.app.storage
 
+import com.cascadestreamer.app.managers.AudioPreferences
+import com.cascadestreamer.app.managers.AudioPreferencesData
+import com.cascadestreamer.app.managers.CompressionLevel
+import com.cascadestreamer.app.ui.VideoSettings
+import com.cascadestreamer.app.ui.AspectRatio
+import com.cascadestreamer.app.data.WatchHistoryManager
+import com.cascadestreamer.app.data.Playlist
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.runtime.mutableStateOf

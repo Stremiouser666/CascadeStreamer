@@ -1,5 +1,8 @@
 package com.cascadestreamer.app.ui
 
+import com.cascadestreamer.app.states.AppState
+import com.cascadestreamer.app.ui.dialogs.AddUrlDialog
+import com.cascadestreamer.app.data.Video
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

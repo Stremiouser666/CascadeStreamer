@@ -1,5 +1,7 @@
 package com.cascadestreamer.app.ui
 
+import com.cascadestreamer.app.data.Video
+import com.cascadestreamer.app.states.AppState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
