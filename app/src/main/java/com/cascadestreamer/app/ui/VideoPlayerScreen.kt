@@ -1,4 +1,4 @@
-package com.cascadestreamer.app
+package com.cascadestreamer.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

@@ -1,4 +1,4 @@
-package com.cascadestreamer.app
+package com.cascadestreamer.app.data
 
 data class Video(
     val id: String,

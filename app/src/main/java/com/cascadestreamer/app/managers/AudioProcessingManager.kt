@@ -1,4 +1,4 @@
-package com.cascadestreamer.app
+package com.cascadestreamer.app.managers
 
 import androidx.media3.exoplayer.ExoPlayer
 

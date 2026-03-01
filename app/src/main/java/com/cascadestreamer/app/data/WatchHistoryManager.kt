@@ -1,4 +1,4 @@
-package com.cascadestreamer.app
+package com.cascadestreamer.app.data
 
 import androidx.compose.runtime.mutableStateOf
 

@@ -1,4 +1,4 @@
-package com.cascadestreamer.app
+package com.cascadestreamer.app.managers
 
 data class StreamInfo(
     val url: String,

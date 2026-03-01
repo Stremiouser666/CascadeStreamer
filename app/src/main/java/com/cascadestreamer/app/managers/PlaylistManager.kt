@@ -1,4 +1,4 @@
-package com.cascadestreamer.app
+package com.cascadestreamer.app.managers
 
 class PlaylistManager(
     private val repository: VideoRepository = VideoRepository()

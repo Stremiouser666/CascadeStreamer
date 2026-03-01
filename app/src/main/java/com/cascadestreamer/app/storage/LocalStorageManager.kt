@@ -1,4 +1,4 @@
-package com.cascadestreamer.app
+package com.cascadestreamer.app.storage
 
 import android.content.Context
 import android.content.SharedPreferences

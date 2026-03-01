@@ -1,4 +1,4 @@
-package com.cascadestreamer.app
+package com.cascadestreamer.app.data
 
 class VideoRepository {
     private val videos = mutableListOf<Video>()
