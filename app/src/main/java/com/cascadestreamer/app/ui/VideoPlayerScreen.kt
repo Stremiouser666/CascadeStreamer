@@ -1,6 +1,5 @@
 package com.cascadestreamer.app.ui
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
@@ -16,6 +15,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import com.cascadestreamer.app.DebugLogger
 import com.cascadestreamer.app.data.Video
 import com.cascadestreamer.app.states.AppState
 
@@ -27,28 +27,41 @@ fun VideoPlayerScreen(
     appState: AppState
 ) {
     val context = LocalContext.current
+    val debugLogger = remember { DebugLogger(context) }
     var exoPlayer by remember { mutableStateOf<ExoPlayer?>(null) }
     var isPlaying by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
     
     LaunchedEffect(Unit) {
+        debugLogger.log("VideoPlayer", "Initializing player for: ${video.title}")
+        debugLogger.log("VideoPlayer", "URL: ${video.url}")
+        debugLogger.log("VideoPlayer", "Quality: $quality")
+        
         try {
             val player = ExoPlayer.Builder(context).build()
             exoPlayer = player
+            debugLogger.log("VideoPlayer", "ExoPlayer created successfully")
             
-            Log.d("VideoPlayer", "Creating MediaItem for: ${video.url}")
             val mediaItem = MediaItem.fromUri(video.url)
+            debugLogger.log("VideoPlayer", "MediaItem created from URI")
+            
             player.setMediaItem(mediaItem)
+            debugLogger.log("VideoPlayer", "MediaItem set to player")
+            
             player.prepare()
+            debugLogger.log("VideoPlayer", "Player prepared")
+            
             player.playWhenReady = true
             isPlaying = true
-            
-            Log.d("VideoPlayer", "Player ready, playing: ${video.title}")
+            debugLogger.log("VideoPlayer", "Playback started")
             
             if (video.currentPosition > 0) {
                 player.seekTo(video.currentPosition)
+                debugLogger.log("VideoPlayer", "Seeked to position: ${video.currentPosition}")
             }
         } catch (e: Exception) {
-            Log.e("VideoPlayer", "Error initializing player", e)
+            debugLogger.log("VideoPlayer", "ERROR initializing player", e)
+            errorMessage = "Error: ${e.message}"
         }
     }
     
@@ -61,6 +74,7 @@ fun VideoPlayerScreen(
             AndroidView(
                 modifier = Modifier.fillMaxSize(),
                 factory = { ctx ->
+                    debugLogger.log("VideoPlayer", "Creating PlayerView")
                     PlayerView(ctx).apply {
                         this.player = player
                         useController = true
@@ -92,6 +106,18 @@ fun VideoPlayerScreen(
                         .background(Color.Black.copy(alpha = 0.7f))
                         .padding(12.dp)
                 )
+                
+                // Show debug info if error
+                if (errorMessage.isNotEmpty()) {
+                    Text(
+                        errorMessage,
+                        fontSize = 12.sp,
+                        color = Color.Red,
+                        modifier = Modifier
+                            .background(Color.Black.copy(alpha = 0.7f))
+                            .padding(12.dp)
+                    )
+                }
             }
             
             Row(
@@ -107,9 +133,11 @@ fun VideoPlayerScreen(
                             if (it.isPlaying) {
                                 it.pause()
                                 isPlaying = false
+                                debugLogger.log("VideoPlayer", "Playback paused")
                             } else {
                                 it.play()
                                 isPlaying = true
+                                debugLogger.log("VideoPlayer", "Playback resumed")
                             }
                         }
                     }
@@ -120,6 +148,7 @@ fun VideoPlayerScreen(
                 Button(onClick = {
                     exoPlayer?.let {
                         appState.updateVideoProgress(video.id, it.currentPosition)
+                        debugLogger.log("VideoPlayer", "Position saved: ${it.currentPosition}")
                     }
                     onBack()
                 }) {
@@ -133,6 +162,7 @@ fun VideoPlayerScreen(
         onDispose {
             exoPlayer?.let { player ->
                 appState.updateVideoProgress(video.id, player.currentPosition)
+                debugLogger.log("VideoPlayer", "Player disposed, position saved: ${player.currentPosition}")
                 player.release()
             }
         }
