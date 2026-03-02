@@ -1,0 +1,16 @@
+name: Force Artifact Cleanup
+
+on:
+  workflow_dispatch: # Manual trigger only
+
+jobs:
+  delete-artifacts:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Delete all build artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: '*'
+          useGlob: true
