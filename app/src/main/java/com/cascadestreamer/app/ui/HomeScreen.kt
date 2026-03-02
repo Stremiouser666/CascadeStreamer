@@ -1,11 +1,10 @@
 package com.cascadestreamer.app.ui
 
-import com.cascadestreamer.app.states.AppState
-import com.cascadestreamer.app.data.Video
-import com.cascadestreamer.app.data.Playlist
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -13,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cascadestreamer.app.states.AppState
+import com.cascadestreamer.app.data.Video
+import com.cascadestreamer.app.data.Playlist
 
 @Composable
 fun HomeScreen(
@@ -27,6 +29,7 @@ fun HomeScreen(
             .fillMaxSize()
             .background(Color.Black)
             .padding(16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         Row(
             modifier = Modifier
@@ -60,6 +63,26 @@ fun HomeScreen(
         
         Spacer(modifier = Modifier.height(12.dp))
         
+        // Display added videos
+        if (appState.videos.value.isEmpty()) {
+            Text(
+                "No videos added yet",
+                fontSize = 14.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(8.dp)
+            )
+        } else {
+            appState.videos.value.forEach { video ->
+                VideoItem(
+                    video = video,
+                    onClick = { onVideoSelected(video) }
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
         Text(
             "PLAYLISTS",
             fontSize = 18.sp,
@@ -73,6 +96,32 @@ fun HomeScreen(
             "Placeholder for playlist grid",
             fontSize = 14.sp,
             color = Color.Gray
+        )
+    }
+}
+
+@Composable
+fun VideoItem(
+    video: Video,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.DarkGray)
+            .clickable { onClick() }
+            .padding(12.dp)
+    ) {
+        Text(
+            video.title,
+            fontSize = 16.sp,
+            color = Color.White
+        )
+        Text(
+            video.url,
+            fontSize = 11.sp,
+            color = Color.Gray,
+            modifier = Modifier.padding(top = 4.dp)
         )
     }
 }
