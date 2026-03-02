@@ -1,5 +1,6 @@
 package com.cascadestreamer.app
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,6 +22,11 @@ fun CascadeStreamerApp() {
     val currentScreen = remember { mutableStateOf(Screen.HOME) }
     val selectedVideo = remember { mutableStateOf<Video?>(null) }
     val selectedQuality = remember { mutableStateOf("720p") }
+    
+    // Handle back button
+    BackHandler(enabled = currentScreen.value != Screen.HOME) {
+        currentScreen.value = Screen.HOME
+    }
     
     when (currentScreen.value) {
         Screen.HOME -> HomeScreen(
