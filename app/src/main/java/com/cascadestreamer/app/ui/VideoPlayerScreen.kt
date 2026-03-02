@@ -1,7 +1,6 @@
 package com.cascadestreamer.app.ui
 
-import com.cascadestreamer.app.data.Video
-import com.cascadestreamer.app.states.AppState
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
@@ -17,6 +16,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import com.cascadestreamer.app.data.Video
+import com.cascadestreamer.app.states.AppState
 
 @Composable
 fun VideoPlayerScreen(
@@ -30,17 +31,24 @@ fun VideoPlayerScreen(
     var isPlaying by remember { mutableStateOf(false) }
     
     LaunchedEffect(Unit) {
-        val player = ExoPlayer.Builder(context).build()
-        exoPlayer = player
-        
-        val streamUrl = appState.getStreamUrl(video.url, quality)
-        val mediaItem = MediaItem.fromUri(streamUrl)
-        player.setMediaItem(mediaItem)
-        player.prepare()
-        player.playWhenReady = true
-        
-        if (video.currentPosition > 0) {
-            player.seekTo(video.currentPosition)
+        try {
+            val player = ExoPlayer.Builder(context).build()
+            exoPlayer = player
+            
+            Log.d("VideoPlayer", "Creating MediaItem for: ${video.url}")
+            val mediaItem = MediaItem.fromUri(video.url)
+            player.setMediaItem(mediaItem)
+            player.prepare()
+            player.playWhenReady = true
+            isPlaying = true
+            
+            Log.d("VideoPlayer", "Player ready, playing: ${video.title}")
+            
+            if (video.currentPosition > 0) {
+                player.seekTo(video.currentPosition)
+            }
+        } catch (e: Exception) {
+            Log.e("VideoPlayer", "Error initializing player", e)
         }
     }
     
@@ -93,17 +101,19 @@ fun VideoPlayerScreen(
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Button(onClick = {
-                    exoPlayer?.let {
-                        if (it.isPlaying) {
-                            it.pause()
-                            isPlaying = false
-                        } else {
-                            it.play()
-                            isPlaying = true
+                Button(
+                    onClick = {
+                        exoPlayer?.let {
+                            if (it.isPlaying) {
+                                it.pause()
+                                isPlaying = false
+                            } else {
+                                it.play()
+                                isPlaying = true
+                            }
                         }
                     }
-                }) {
+                ) {
                     Text(if (isPlaying) "Pause" else "Play")
                 }
                 
