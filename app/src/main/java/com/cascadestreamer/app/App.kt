@@ -17,14 +17,25 @@ enum class Screen {
 }
 
 @Composable
-fun CascadeStreamerApp() {
+fun CascadeStreamerApp(onExitApp: () -> Unit = {}) {
     val appState = remember { AppState() }
     val currentScreen = remember { mutableStateOf(Screen.HOME) }
     val selectedVideo = remember { mutableStateOf<Video?>(null) }
     val selectedQuality = remember { mutableStateOf("720p") }
+    val backPressCount = remember { mutableStateOf(0) }
     
+    // Back button on HOME screen = exit app
+    BackHandler(enabled = currentScreen.value == Screen.HOME) {
+        backPressCount.value++
+        if (backPressCount.value >= 2) {
+            onExitApp()
+        }
+    }
+    
+    // Back button on other screens = go HOME
     BackHandler(enabled = currentScreen.value != Screen.HOME) {
         currentScreen.value = Screen.HOME
+        backPressCount.value = 0
     }
     
     when (currentScreen.value) {
@@ -32,28 +43,37 @@ fun CascadeStreamerApp() {
             appState = appState,
             onVideoSelected = { video ->
                 selectedVideo.value = video
-                appState.playVideo(video)  // Populate qualities
+                appState.playVideo(video)
                 currentScreen.value = Screen.QUALITY
+                backPressCount.value = 0
             },
             onPlaylistSelected = { playlist ->
                 appState.selectPlaylist(playlist)
             },
             onSettingsClick = {
                 currentScreen.value = Screen.SETTINGS
+                backPressCount.value = 0
             },
             onInfoClick = {
                 currentScreen.value = Screen.INFO
+                backPressCount.value = 0
             }
         )
         
         Screen.SETTINGS -> SettingsScreen(
             appState = appState,
-            onBack = { currentScreen.value = Screen.HOME },
+            onBack = { 
+                currentScreen.value = Screen.HOME
+                backPressCount.value = 0
+            },
             onQuality = { currentScreen.value = Screen.QUALITY }
         )
         
         Screen.INFO -> InfoScreen(
-            onBack = { currentScreen.value = Screen.HOME }
+            onBack = { 
+                currentScreen.value = Screen.HOME
+                backPressCount.value = 0
+            }
         )
         
         Screen.QUALITY -> {
@@ -65,7 +85,10 @@ fun CascadeStreamerApp() {
                         selectedQuality.value = quality
                         currentScreen.value = Screen.PLAYER
                     },
-                    onBack = { currentScreen.value = Screen.HOME }
+                    onBack = { 
+                        currentScreen.value = Screen.HOME
+                        backPressCount.value = 0
+                    }
                 )
             }
         }
@@ -75,7 +98,10 @@ fun CascadeStreamerApp() {
                 VideoPlayerScreen(
                     video = video,
                     quality = selectedQuality.value,
-                    onBack = { currentScreen.value = Screen.HOME },
+                    onBack = { 
+                        currentScreen.value = Screen.HOME
+                        backPressCount.value = 0
+                    },
                     appState = appState
                 )
             }
