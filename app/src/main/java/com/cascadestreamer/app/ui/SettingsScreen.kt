@@ -1,11 +1,10 @@
 package com.cascadestreamer.app.ui
 
-import com.cascadestreamer.app.states.AppState
-import com.cascadestreamer.app.ui.dialogs.AddUrlDialog
-import com.cascadestreamer.app.data.Video
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -15,6 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cascadestreamer.app.states.AppState
+import com.cascadestreamer.app.ui.dialogs.AddUrlDialog
+import com.cascadestreamer.app.data.Video
 
 @Composable
 fun SettingsScreen(
@@ -29,6 +31,7 @@ fun SettingsScreen(
             .fillMaxSize()
             .background(Color.Black)
             .padding(32.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         Text(
             "Settings",
