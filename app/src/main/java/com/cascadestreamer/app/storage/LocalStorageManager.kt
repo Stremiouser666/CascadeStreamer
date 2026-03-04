@@ -1,18 +1,18 @@
 package com.cascadestreamer.app.storage
 
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.State
+import com.google.gson.Gson
 import com.cascadestreamer.app.data.Video
+import com.cascadestreamer.app.data.Playlist
 import com.cascadestreamer.app.data.WatchHistoryItem
 import com.cascadestreamer.app.managers.AudioPreferences
 import com.cascadestreamer.app.managers.AudioPreferencesData
 import com.cascadestreamer.app.managers.CompressionLevel
 import com.cascadestreamer.app.ui.VideoSettings
 import com.cascadestreamer.app.ui.AspectRatio
-import com.cascadestreamer.app.data.WatchHistoryManager
-import com.cascadestreamer.app.data.Playlist
-import android.content.Context
-import android.content.SharedPreferences
-import androidx.compose.runtime.mutableStateOf
-import com.google.gson.Gson
 import java.io.File
 
 class LocalStorageManager(context: Context) {
@@ -140,9 +140,8 @@ class LocalStorageManager(context: Context) {
             emptyList()
         }
     }
-}
-
-    // Videos persistence
+    
+    // Videos
     fun saveVideos(videos: List<Video>) {
         try {
             val json = gson.toJson(videos)
@@ -168,3 +167,4 @@ class LocalStorageManager(context: Context) {
             emptyList()
         }
     }
+}
