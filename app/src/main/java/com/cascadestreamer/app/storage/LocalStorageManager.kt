@@ -1,5 +1,6 @@
 package com.cascadestreamer.app.storage
 
+import com.cascadestreamer.app.data.Video
 import com.cascadestreamer.app.data.WatchHistoryItem
 import com.cascadestreamer.app.managers.AudioPreferences
 import com.cascadestreamer.app.managers.AudioPreferencesData
