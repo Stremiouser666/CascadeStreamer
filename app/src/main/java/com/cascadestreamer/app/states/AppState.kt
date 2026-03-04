@@ -1,15 +1,18 @@
 package com.cascadestreamer.app.states
 
+import android.content.Context
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.State
 import com.cascadestreamer.app.data.Video
 import com.cascadestreamer.app.data.VideoRepository
 import com.cascadestreamer.app.data.Playlist
 import com.cascadestreamer.app.managers.YtDlpManager
+import com.cascadestreamer.app.storage.LocalStorageManager
 
 class AppState(
     private val repository: VideoRepository = VideoRepository(),
-    private val ytDlpManager: YtDlpManager = YtDlpManager()
+    private val ytDlpManager: YtDlpManager = YtDlpManager(),
+    private val storageManager: LocalStorageManager? = null
 ) {
     private val _videos = mutableStateOf<List<Video>>(emptyList())
     val videos: State<List<Video>> = _videos
@@ -26,14 +29,40 @@ class AppState(
     private val _availableQualities = mutableStateOf<List<String>>(emptyList())
     val availableQualities: State<List<String>> = _availableQualities
     
+    init {
+        // Load saved videos on startup
+        loadFromStorage()
+    }
+    
+    private fun loadFromStorage() {
+        storageManager?.let {
+            try {
+                val savedVideos = it.loadVideos()
+                if (savedVideos.isNotEmpty()) {
+                    _videos.value = savedVideos
+                }
+                val savedPlaylists = it.loadPlaylists()
+                if (savedPlaylists.isNotEmpty()) {
+                    _playlists.value = savedPlaylists
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+    
     fun addVideo(video: Video) {
         repository.addVideo(video)
         _videos.value = repository.getVideos()
+        // Save to persistent storage
+        storageManager?.saveVideos(_videos.value)
     }
     
     fun createPlaylist(name: String) {
         repository.createPlaylist(name)
         _playlists.value = repository.getPlaylists()
+        // Save to persistent storage
+        storageManager?.savePlaylists(_playlists.value)
     }
     
     fun playVideo(video: Video) {
@@ -52,6 +81,8 @@ class AppState(
             _videos.value = _videos.value.map { v ->
                 if (v.id == videoId) updated else v
             }
+            // Save updated progress
+            storageManager?.saveVideos(_videos.value)
         }
     }
     

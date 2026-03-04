@@ -17,14 +17,15 @@ enum class Screen {
 }
 
 @Composable
-fun CascadeStreamerApp(onExitApp: () -> Unit = {}) {
-    val appState = remember { AppState() }
+fun CascadeStreamerApp(
+    appState: AppState = AppState(),
+    onExitApp: () -> Unit = {}
+) {
     val currentScreen = remember { mutableStateOf(Screen.HOME) }
     val selectedVideo = remember { mutableStateOf<Video?>(null) }
     val selectedQuality = remember { mutableStateOf("720p") }
     val backPressCount = remember { mutableStateOf(0) }
     
-    // Back button on HOME screen = exit app
     BackHandler(enabled = currentScreen.value == Screen.HOME) {
         backPressCount.value++
         if (backPressCount.value >= 2) {
@@ -32,7 +33,6 @@ fun CascadeStreamerApp(onExitApp: () -> Unit = {}) {
         }
     }
     
-    // Back button on other screens = go HOME
     BackHandler(enabled = currentScreen.value != Screen.HOME) {
         currentScreen.value = Screen.HOME
         backPressCount.value = 0

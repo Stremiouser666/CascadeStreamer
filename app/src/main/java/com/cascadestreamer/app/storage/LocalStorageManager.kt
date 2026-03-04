@@ -140,3 +140,30 @@ class LocalStorageManager(context: Context) {
         }
     }
 }
+
+    // Videos persistence
+    fun saveVideos(videos: List<Video>) {
+        try {
+            val json = gson.toJson(videos)
+            val file = File(documentsDir, "videos.json")
+            file.writeText(json)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+    
+    fun loadVideos(): List<Video> {
+        return try {
+            val file = File(documentsDir, "videos.json")
+            if (file.exists()) {
+                val json = file.readText()
+                val type = object : com.google.gson.reflect.TypeToken<List<Video>>() {}.type
+                gson.fromJson(json, type) ?: emptyList()
+            } else {
+                emptyList()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
