@@ -1,7 +1,6 @@
 package com.cascadestreamer.app.managers
 
 import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
 
 data class TVMazeShow(
     val id: Int,
@@ -9,11 +8,17 @@ data class TVMazeShow(
     val premiered: String? = null,
     val rating: TVMazeRating? = null,
     val summary: String? = null,
-    val genres: List<String> = emptyList()
+    val genres: List<String> = emptyList(),
+    val image: TVMazeImage? = null
 )
 
 data class TVMazeRating(
     val average: Double? = null
+)
+
+data class TVMazeImage(
+    val medium: String? = null,
+    val original: String? = null
 )
 
 data class TVMazeEpisode(
@@ -22,7 +27,8 @@ data class TVMazeEpisode(
     val number: Int? = null,
     val season: Int? = null,
     val summary: String? = null,
-    val runtime: Int? = null
+    val runtime: Int? = null,
+    val image: TVMazeImage? = null
 )
 
 class TVMazeManager {
@@ -30,20 +36,17 @@ class TVMazeManager {
     private val baseUrl = "https://api.tvmaze.com"
     
     fun searchShows(query: String): List<TVMazeShow> {
-        // TODO: Implement API call
-        // GET /search/shows?q=QUERY
+        // TODO: GET /search/shows?q=QUERY
         return emptyList()
     }
     
     fun getShowDetails(showId: Int): TVMazeShow? {
-        // TODO: Implement API call
-        // GET /shows/{id}
+        // TODO: GET /shows/{id}
         return null
     }
     
     fun getShowEpisodes(showId: Int): List<TVMazeEpisode> {
-        // TODO: Implement API call
-        // GET /shows/{id}/episodes
+        // TODO: GET /shows/{id}/episodes
         return emptyList()
     }
 }
