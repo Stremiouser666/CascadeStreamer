@@ -44,7 +44,8 @@ fun CascadeStreamerApp(
             onVideoSelected = { video ->
                 selectedVideo.value = video
                 appState.playVideo(video)
-                currentScreen.value = Screen.QUALITY
+                selectedQuality.value = appState.loadSelectedQuality()
+                currentScreen.value = Screen.PLAYER
                 backPressCount.value = 0
             },
             onPlaylistSelected = { playlist ->
