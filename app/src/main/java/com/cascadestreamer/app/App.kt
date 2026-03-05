@@ -82,6 +82,7 @@ fun CascadeStreamerApp(
                     availableQualities = appState.availableQualities.value,
                     selectedQuality = selectedQuality.value,
                     onQualitySelected = { quality ->
+                        appState.saveSelectedQuality(quality)
                         storageManager?.saveSelectedQuality(quality)
                         selectedQuality.value = quality
                         currentScreen.value = Screen.PLAYER
