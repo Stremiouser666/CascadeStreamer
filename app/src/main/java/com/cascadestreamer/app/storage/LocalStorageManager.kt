@@ -167,4 +167,15 @@ class LocalStorageManager(context: Context) {
             emptyList()
         }
     }
+
+    fun saveSelectedQuality(quality: String) {
+        sharedPreferences.edit().apply {
+            putString("selected_quality", quality)
+            apply()
+        }
+    }
+    
+    fun loadSelectedQuality(): String {
+        return sharedPreferences.getString("selected_quality", "720p") ?: "720p"
+    }
 }
