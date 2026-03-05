@@ -30,7 +30,6 @@ class AppState(
     val availableQualities: State<List<String>> = _availableQualities
     
     init {
-        // Load saved videos on startup
         loadFromStorage()
     }
     
@@ -54,14 +53,12 @@ class AppState(
     fun addVideo(video: Video) {
         repository.addVideo(video)
         _videos.value = repository.getVideos()
-        // Save to persistent storage
         storageManager?.saveVideos(_videos.value)
     }
     
     fun createPlaylist(name: String) {
         repository.createPlaylist(name)
         _playlists.value = repository.getPlaylists()
-        // Save to persistent storage
         storageManager?.savePlaylists(_playlists.value)
     }
     
@@ -81,12 +78,21 @@ class AppState(
             _videos.value = _videos.value.map { v ->
                 if (v.id == videoId) updated else v
             }
-            // Save updated progress
             storageManager?.saveVideos(_videos.value)
         }
     }
     
     fun getStreamUrl(videoUrl: String, quality: String): String {
         return ytDlpManager.getStreamUrlForQuality(videoUrl, quality)
+    }
+    
+    fun saveSelectedQuality(quality: String) {
+        storageManager?.let {
+            it.saveSelectedQuality(quality)
+        }
+    }
+    
+    fun loadSelectedQuality(): String {
+        return storageManager?.loadSelectedQuality() ?: "720p"
     }
 }
