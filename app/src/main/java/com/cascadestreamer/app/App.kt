@@ -23,7 +23,7 @@ fun CascadeStreamerApp(
 ) {
     val currentScreen = remember { mutableStateOf(Screen.HOME) }
     val selectedVideo = remember { mutableStateOf<Video?>(null) }
-    val selectedQuality = remember { mutableStateOf(storageManager?.loadSelectedQuality() ?: "720p") }
+    val selectedQuality = remember { mutableStateOf(appState.loadSelectedQuality()) }
     val backPressCount = remember { mutableStateOf(0) }
     
     BackHandler(enabled = currentScreen.value == Screen.HOME) {
@@ -82,9 +82,8 @@ fun CascadeStreamerApp(
                     availableQualities = appState.availableQualities.value,
                     selectedQuality = selectedQuality.value,
                     onQualitySelected = { quality ->
-                        appState.saveSelectedQuality(quality)
-                        storageManager?.saveSelectedQuality(quality)
                         selectedQuality.value = quality
+                        appState.saveSelectedQuality(quality)
                         currentScreen.value = Screen.PLAYER
                     },
                     onBack = { 
