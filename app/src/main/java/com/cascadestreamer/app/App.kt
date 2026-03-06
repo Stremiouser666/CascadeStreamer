@@ -5,10 +5,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import com.cascadestreamer.app.data.Video
-import com.cascadestreamer.app.managers.TVMazeShow
-import com.cascadestreamer.app.managers.TVMazeRating
-import com.cascadestreamer.app.managers.TVMazeImage
-import com.cascadestreamer.app.managers.TVMazeEpisode
 import com.cascadestreamer.app.states.AppState
 import com.cascadestreamer.app.ui.HomeScreen
 import com.cascadestreamer.app.ui.SettingsScreen
@@ -32,7 +28,6 @@ fun CascadeStreamerApp(
     val selectedVideo = remember { mutableStateOf<Video?>(null) }
     val selectedQuality = remember { mutableStateOf(appState.loadSelectedQuality()) }
     val selectedSeries = remember { mutableStateOf<SeriesData?>(null) }
-    val selectedFile = remember { mutableStateOf<String?>(null) }
     val backPressCount = remember { mutableStateOf(0) }
     
     BackHandler(enabled = currentScreen.value == Screen.HOME) {
@@ -72,14 +67,11 @@ fun CascadeStreamerApp(
                 currentScreen.value = Screen.FILE_BROWSER
                 backPressCount.value = 0
             }
-                currentScreen.value = Screen.INFO
-                backPressCount.value = 0
-            }
         )
         
         Screen.SETTINGS -> SettingsScreen(
             appState = appState,
-            onBack = { 
+            onBack = {
                 currentScreen.value = Screen.HOME
                 backPressCount.value = 0
             },
@@ -87,7 +79,7 @@ fun CascadeStreamerApp(
         )
         
         Screen.INFO -> InfoScreen(
-            onBack = { 
+            onBack = {
                 currentScreen.value = Screen.HOME
                 backPressCount.value = 0
             }
@@ -103,7 +95,7 @@ fun CascadeStreamerApp(
                         appState.saveSelectedQuality(quality)
                         currentScreen.value = Screen.PLAYER
                     },
-                    onBack = { 
+                    onBack = {
                         currentScreen.value = Screen.HOME
                         backPressCount.value = 0
                     }
@@ -148,7 +140,7 @@ fun CascadeStreamerApp(
                 VideoPlayerScreen(
                     video = video,
                     quality = selectedQuality.value,
-                    onBack = { 
+                    onBack = {
                         currentScreen.value = Screen.HOME
                         backPressCount.value = 0
                     },
