@@ -5,15 +5,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import com.cascadestreamer.app.data.Video
+import com.cascadestreamer.app.managers.TVMazeShow
+import com.cascadestreamer.app.managers.TVMazeRating
+import com.cascadestreamer.app.managers.TVMazeImage
+import com.cascadestreamer.app.managers.TVMazeEpisode
 import com.cascadestreamer.app.states.AppState
 import com.cascadestreamer.app.ui.HomeScreen
 import com.cascadestreamer.app.ui.SettingsScreen
 import com.cascadestreamer.app.ui.InfoScreen
 import com.cascadestreamer.app.ui.VideoPlayerScreen
 import com.cascadestreamer.app.ui.QualitySelectionScreen
+import com.cascadestreamer.app.ui.SeriesDetailScreen
+import com.cascadestreamer.app.ui.SeriesData
 
 enum class Screen {
-    HOME, SETTINGS, INFO, PLAYER, QUALITY
+    HOME, SETTINGS, INFO, PLAYER, QUALITY, SERIES
 }
 
 @Composable
@@ -24,6 +30,7 @@ fun CascadeStreamerApp(
     val currentScreen = remember { mutableStateOf(Screen.HOME) }
     val selectedVideo = remember { mutableStateOf<Video?>(null) }
     val selectedQuality = remember { mutableStateOf(appState.loadSelectedQuality()) }
+    val selectedSeries = remember { mutableStateOf<SeriesData?>(null) }
     val backPressCount = remember { mutableStateOf(0) }
     
     BackHandler(enabled = currentScreen.value == Screen.HOME) {
@@ -88,6 +95,21 @@ fun CascadeStreamerApp(
                         currentScreen.value = Screen.PLAYER
                     },
                     onBack = { 
+                        currentScreen.value = Screen.HOME
+                        backPressCount.value = 0
+                    }
+                )
+            }
+        }
+        
+        Screen.SERIES -> {
+            selectedSeries.value?.let { series ->
+                SeriesDetailScreen(
+                    series = series,
+                    onPlay = {
+                        currentScreen.value = Screen.PLAYER
+                    },
+                    onBack = {
                         currentScreen.value = Screen.HOME
                         backPressCount.value = 0
                     }
