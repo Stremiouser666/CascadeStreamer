@@ -59,3 +59,6 @@ dependencies {
 }
 
     // Retrofit & OkHttp
+
+    // Coil image loading
+    implementation("io.coil-kt:coil-compose:2.4.0")
