@@ -17,9 +17,10 @@ import com.cascadestreamer.app.ui.VideoPlayerScreen
 import com.cascadestreamer.app.ui.QualitySelectionScreen
 import com.cascadestreamer.app.ui.SeriesDetailScreen
 import com.cascadestreamer.app.ui.SeriesData
+import com.cascadestreamer.app.ui.FileBrowserScreen
 
 enum class Screen {
-    HOME, SETTINGS, INFO, PLAYER, QUALITY, SERIES
+    HOME, SETTINGS, INFO, PLAYER, QUALITY, SERIES, FILE_BROWSER
 }
 
 @Composable
@@ -31,6 +32,7 @@ fun CascadeStreamerApp(
     val selectedVideo = remember { mutableStateOf<Video?>(null) }
     val selectedQuality = remember { mutableStateOf(appState.loadSelectedQuality()) }
     val selectedSeries = remember { mutableStateOf<SeriesData?>(null) }
+    val selectedFile = remember { mutableStateOf<String?>(null) }
     val backPressCount = remember { mutableStateOf(0) }
     
     BackHandler(enabled = currentScreen.value == Screen.HOME) {
@@ -115,6 +117,23 @@ fun CascadeStreamerApp(
                     }
                 )
             }
+        }
+        
+        Screen.FILE_BROWSER -> {
+            FileBrowserScreen(
+                onFileSelected = { filePath ->
+                    selectedVideo.value = Video(
+                        id = filePath,
+                        title = filePath.substringAfterLast("/"),
+                        url = "file://$filePath"
+                    )
+                    currentScreen.value = Screen.PLAYER
+                },
+                onBack = {
+                    currentScreen.value = Screen.HOME
+                    backPressCount.value = 0
+                }
+            )
         }
         
         Screen.PLAYER -> {
