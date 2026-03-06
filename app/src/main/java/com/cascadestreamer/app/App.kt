@@ -67,6 +67,13 @@ fun CascadeStreamerApp(
             onInfoClick = {
                 currentScreen.value = Screen.INFO
                 backPressCount.value = 0
+            },
+            onOpenFileClick = {
+                currentScreen.value = Screen.FILE_BROWSER
+                backPressCount.value = 0
+            }
+                currentScreen.value = Screen.INFO
+                backPressCount.value = 0
             }
         )
         

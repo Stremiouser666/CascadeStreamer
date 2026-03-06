@@ -5,6 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,7 +24,8 @@ fun HomeScreen(
     onVideoSelected: (Video) -> Unit,
     onPlaylistSelected: (Playlist) -> Unit,
     onSettingsClick: () -> Unit,
-    onInfoClick: () -> Unit
+    onInfoClick: () -> Unit,
+    onOpenFileClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -52,6 +55,18 @@ fun HomeScreen(
             )
         }
         
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        Button(
+            onClick = onOpenFileClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+        ) {
+            Text("📁 Open File", color = Color.White, fontSize = 16.sp)
+        }
+        
         Spacer(modifier = Modifier.height(24.dp))
         
         Text(
@@ -63,7 +78,6 @@ fun HomeScreen(
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        // Display added videos
         if (appState.videos.value.isEmpty()) {
             Text(
                 "No videos added yet",
