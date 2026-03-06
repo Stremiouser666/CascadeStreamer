@@ -1,6 +1,53 @@
 package com.cascadestreamer.app.managers
 
-import com.google.gson.Gson
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
+class TVMazeManager {
+    private val baseUrl = "https://api.tvmaze.com/"
+    private val retrofit = Retrofit.Builder()
+        .baseUrl(baseUrl)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+    
+    private val service = retrofit.create(TVMazeService::class.java)
+    
+    suspend fun searchShows(query: String): List<TVMazeShow> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val results = service.searchShows(query)
+                results.map { it.show }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
+        }
+    }
+    
+    suspend fun getShowDetails(showId: Int): TVMazeShow? {
+        return withContext(Dispatchers.IO) {
+            try {
+                service.getShowDetails(showId)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
+    }
+    
+    suspend fun getShowEpisodes(showId: Int): List<TVMazeEpisode> {
+        return withContext(Dispatchers.IO) {
+            try {
+                service.getShowEpisodes(showId)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
+        }
+    }
+}
 
 data class TVMazeShow(
     val id: Int,
@@ -30,23 +77,3 @@ data class TVMazeEpisode(
     val runtime: Int? = null,
     val image: TVMazeImage? = null
 )
-
-class TVMazeManager {
-    private val gson = Gson()
-    private val baseUrl = "https://api.tvmaze.com"
-    
-    fun searchShows(query: String): List<TVMazeShow> {
-        // TODO: GET /search/shows?q=QUERY
-        return emptyList()
-    }
-    
-    fun getShowDetails(showId: Int): TVMazeShow? {
-        // TODO: GET /shows/{id}
-        return null
-    }
-    
-    fun getShowEpisodes(showId: Int): List<TVMazeEpisode> {
-        // TODO: GET /shows/{id}/episodes
-        return emptyList()
-    }
-}
