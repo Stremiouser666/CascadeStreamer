@@ -22,7 +22,7 @@ fun FileBrowserScreen(
     onFileSelected: (String) -> Unit,
     onBack: () -> Unit
 ) {
-    val currentPath = remember { mutableStateOf("/sdcard") }
+    val currentPath = remember { mutableStateOf("/storage/emulated/0") }
     val files = remember { mutableStateOf<List<File>>(emptyList()) }
     
     // Load files on composition
