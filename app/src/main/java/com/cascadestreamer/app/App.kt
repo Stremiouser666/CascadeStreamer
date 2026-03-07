@@ -146,12 +146,18 @@ fun CascadeStreamerApp(
         Screen.FILE_BROWSER -> {
             FileBrowserScreen(
                 onFileSelected = { filePath ->
+                    val videoUrl = if (filePath.startsWith("content://") || filePath.startsWith("http")) {
+                        filePath
+                    } else {
+                        "file://$filePath"
+                    }
                     selectedVideo.value = Video(
                         id = filePath,
                         title = filePath.substringAfterLast("/"),
-                        url = "file://$filePath"
+                        url = videoUrl
                     )
                     currentScreen.value = Screen.PLAYER
+                }
                 },
                 onBack = {
                     currentScreen.value = Screen.HOME
