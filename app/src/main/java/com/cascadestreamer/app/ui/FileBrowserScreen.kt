@@ -1,45 +1,32 @@
 package com.cascadestreamer.app.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import java.io.File
 
 @Composable
 fun FileBrowserScreen(
     onFileSelected: (String) -> Unit,
     onBack: () -> Unit
 ) {
-    val currentPath = remember { mutableStateOf("/storage/emulated/0") }
-    val files = remember { mutableStateOf<List<File>>(emptyList()) }
-    val debugInfo = remember { mutableStateOf("") }
-    
-    LaunchedEffect(currentPath.value) {
-        val dir = File(currentPath.value)
-        val exists = dir.exists()
-        val isDir = dir.isDirectory
-        val canRead = dir.canRead()
-        val fileCount = dir.listFiles()?.size ?: 0
-        
-        debugInfo.value = "Path: ${currentPath.value}\nExists: $exists | Dir: $isDir | CanRead: $canRead | Files: $fileCount"
-        
-        files.value = if (exists && isDir) {
-            dir.listFiles()?.sortedBy { !it.isDirectory } ?: emptyList()
-        } else {
-            emptyList()
+    // System file picker - handles all permissions automatically
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let {
+            onFileSelected(it.toString())
         }
     }
     
@@ -47,81 +34,40 @@ fun FileBrowserScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .padding(16.dp)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
         Text(
-            debugInfo.value,
-            fontSize = 11.sp,
-            color = Color.Yellow,
-            modifier = Modifier.padding(bottom = 16.dp)
+            "Select a Video File",
+            fontSize = 24.sp,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 32.dp)
         )
         
-        Column(
+        Button(
+            onClick = {
+                filePickerLauncher.launch(arrayOf("video/*"))
+            },
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
         ) {
-            if (files.value.isEmpty()) {
-                Text(
-                    "No files found",
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(16.dp)
-                )
-            } else {
-                files.value.forEach { file ->
-                    FileItem(
-                        file = file,
-                        onClick = {
-                            if (file.isDirectory) {
-                                currentPath.value = file.absolutePath
-                            } else {
-                                onFileSelected(file.absolutePath)
-                            }
-                        }
-                    )
-                }
-            }
+            Text("📂 Browse Files", color = Color.White, fontSize = 18.sp)
         }
         
-        Text(
-            "← Back",
-            fontSize = 16.sp,
-            color = Color(0xFF64B5F6),
-            fontWeight = FontWeight.Bold,
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Button(
+            onClick = onBack,
             modifier = Modifier
-                .align(Alignment.Start)
-                .clickable { onBack() }
-                .padding(top = 16.dp)
-        )
-    }
-}
-
-@Composable
-fun FileItem(
-    file: File,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(Color.DarkGray)
-            .clickable { onClick() }
-            .padding(12.dp)
-    ) {
-        Text(
-            if (file.isDirectory) "📁 ${file.name}" else "🎬 ${file.name}",
-            fontSize = 16.sp,
-            color = Color.White,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            file.absolutePath,
-            fontSize = 11.sp,
-            color = Color.Gray,
-            modifier = Modifier.padding(top = 4.dp)
-        )
+                .fillMaxWidth()
+                .height(48.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+        ) {
+            Text("← Back", color = Color.White, fontSize = 16.sp)
+        }
     }
 }
