@@ -31,7 +31,7 @@ fun FileBrowserScreen(
         files.value = File(currentPath.value)
             .listFiles()
             ?.sortedBy { !it.isDirectory }
-            ?.filter { it.isDirectory || it.extension in listOf("mp4", "mkv", "webm", "avi") }
+            ?.sortedBy { !it.isDirectory }
             ?: emptyList()
     }
     
