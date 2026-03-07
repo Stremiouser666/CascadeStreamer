@@ -1,9 +1,15 @@
 package com.cascadestreamer.app
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import com.cascadestreamer.app.data.Video
 import com.cascadestreamer.app.states.AppState
 import com.cascadestreamer.app.ui.HomeScreen
@@ -24,11 +30,21 @@ fun CascadeStreamerApp(
     appState: AppState = AppState(),
     onExitApp: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     val currentScreen = remember { mutableStateOf(Screen.HOME) }
     val selectedVideo = remember { mutableStateOf<Video?>(null) }
     val selectedQuality = remember { mutableStateOf(appState.loadSelectedQuality()) }
     val selectedSeries = remember { mutableStateOf<SeriesData?>(null) }
     val backPressCount = remember { mutableStateOf(0) }
+    
+    // Permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            currentScreen.value = Screen.FILE_BROWSER
+        }
+    }
     
     BackHandler(enabled = currentScreen.value == Screen.HOME) {
         backPressCount.value++
@@ -64,7 +80,16 @@ fun CascadeStreamerApp(
                 backPressCount.value = 0
             },
             onOpenFileClick = {
-                currentScreen.value = Screen.FILE_BROWSER
+                // Check permission and request if needed
+                if (ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    currentScreen.value = Screen.FILE_BROWSER
+                } else {
+                    permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                }
                 backPressCount.value = 0
             }
         )
