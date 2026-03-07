@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -25,8 +26,8 @@ fun FileBrowserScreen(
     val currentPath = remember { mutableStateOf("/storage/emulated/0") }
     val files = remember { mutableStateOf<List<File>>(emptyList()) }
     
-    // Load files on composition
-    remember {
+    // Load files whenever path changes
+    LaunchedEffect(currentPath.value) {
         files.value = File(currentPath.value)
             .listFiles()
             ?.sortedBy { !it.isDirectory }
@@ -56,21 +57,26 @@ fun FileBrowserScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            files.value.forEach { file ->
-                FileItem(
-                    file = file,
-                    onClick = {
-                        if (file.isDirectory) {
-                            currentPath.value = file.absolutePath
-                            files.value = file.listFiles()
-                                ?.sortedBy { !it.isDirectory }
-                                ?.filter { it.isDirectory || it.extension in listOf("mp4", "mkv", "webm", "avi") }
-                                ?: emptyList()
-                        } else {
-                            onFileSelected(file.absolutePath)
-                        }
-                    }
+            if (files.value.isEmpty()) {
+                Text(
+                    "No files or folders found",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(16.dp)
                 )
+            } else {
+                files.value.forEach { file ->
+                    FileItem(
+                        file = file,
+                        onClick = {
+                            if (file.isDirectory) {
+                                currentPath.value = file.absolutePath
+                            } else {
+                                onFileSelected(file.absolutePath)
+                            }
+                        }
+                    )
+                }
             }
         }
         
