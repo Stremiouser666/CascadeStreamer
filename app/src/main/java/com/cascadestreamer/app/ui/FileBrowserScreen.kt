@@ -23,16 +23,19 @@ fun FileBrowserScreen(
     onFileSelected: (String) -> Unit,
     onBack: () -> Unit
 ) {
-    val currentPath = remember { mutableStateOf("/storage/emulated/0") }
+    val currentPath = remember { mutableStateOf("/storage/0") }
     val files = remember { mutableStateOf<List<File>>(emptyList()) }
+    val debugInfo = remember { mutableStateOf("") }
     
-    // Load files whenever path changes
     LaunchedEffect(currentPath.value) {
-        files.value = File(currentPath.value)
-            .listFiles()
-            ?.sortedBy { !it.isDirectory }
-            ?.sortedBy { !it.isDirectory }
-            ?: emptyList()
+        val dir = File(currentPath.value)
+        debugInfo.value = "Path exists: ${dir.exists()}, Is dir: ${dir.isDirectory}"
+        
+        files.value = if (dir.exists() && dir.isDirectory) {
+            dir.listFiles()?.sortedBy { !it.isDirectory } ?: emptyList()
+        } else {
+            emptyList()
+        }
     }
     
     Column(
@@ -41,15 +44,19 @@ fun FileBrowserScreen(
             .background(Color.Black)
             .padding(16.dp)
     ) {
-        // Current path
         Text(
             "Browsing: ${currentPath.value}",
             fontSize = 14.sp,
-            color = Color.Gray,
+            color = Color.Gray
+        )
+        
+        Text(
+            debugInfo.value,
+            fontSize = 12.sp,
+            color = Color.Red,
             modifier = Modifier.padding(bottom = 16.dp)
         )
         
-        // File list
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -59,7 +66,7 @@ fun FileBrowserScreen(
         ) {
             if (files.value.isEmpty()) {
                 Text(
-                    "No files or folders found",
+                    "No files found (${files.value.size})",
                     fontSize = 14.sp,
                     color = Color.Gray,
                     modifier = Modifier.padding(16.dp)
@@ -80,7 +87,6 @@ fun FileBrowserScreen(
             }
         }
         
-        // Back button
         Text(
             "← Back",
             fontSize = 16.sp,
