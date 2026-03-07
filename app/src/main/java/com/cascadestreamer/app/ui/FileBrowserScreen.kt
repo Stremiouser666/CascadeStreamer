@@ -23,15 +23,20 @@ fun FileBrowserScreen(
     onFileSelected: (String) -> Unit,
     onBack: () -> Unit
 ) {
-    val currentPath = remember { mutableStateOf("/storage/0") }
+    val currentPath = remember { mutableStateOf("/storage/emulated/0") }
     val files = remember { mutableStateOf<List<File>>(emptyList()) }
     val debugInfo = remember { mutableStateOf("") }
     
     LaunchedEffect(currentPath.value) {
         val dir = File(currentPath.value)
-        debugInfo.value = "Path exists: ${dir.exists()}, Is dir: ${dir.isDirectory}"
+        val exists = dir.exists()
+        val isDir = dir.isDirectory
+        val canRead = dir.canRead()
+        val fileCount = dir.listFiles()?.size ?: 0
         
-        files.value = if (dir.exists() && dir.isDirectory) {
+        debugInfo.value = "Path: ${currentPath.value}\nExists: $exists | Dir: $isDir | CanRead: $canRead | Files: $fileCount"
+        
+        files.value = if (exists && isDir) {
             dir.listFiles()?.sortedBy { !it.isDirectory } ?: emptyList()
         } else {
             emptyList()
@@ -45,15 +50,9 @@ fun FileBrowserScreen(
             .padding(16.dp)
     ) {
         Text(
-            "Browsing: ${currentPath.value}",
-            fontSize = 14.sp,
-            color = Color.Gray
-        )
-        
-        Text(
             debugInfo.value,
-            fontSize = 12.sp,
-            color = Color.Red,
+            fontSize = 11.sp,
+            color = Color.Yellow,
             modifier = Modifier.padding(bottom = 16.dp)
         )
         
@@ -66,7 +65,7 @@ fun FileBrowserScreen(
         ) {
             if (files.value.isEmpty()) {
                 Text(
-                    "No files found (${files.value.size})",
+                    "No files found",
                     fontSize = 14.sp,
                     color = Color.Gray,
                     modifier = Modifier.padding(16.dp)
