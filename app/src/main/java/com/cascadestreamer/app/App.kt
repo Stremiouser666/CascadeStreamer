@@ -37,7 +37,6 @@ fun CascadeStreamerApp(
     val selectedSeries = remember { mutableStateOf<SeriesData?>(null) }
     val backPressCount = remember { mutableStateOf(0) }
     
-    // Permission launcher
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -80,7 +79,6 @@ fun CascadeStreamerApp(
                 backPressCount.value = 0
             },
             onOpenFileClick = {
-                // Check permission and request if needed
                 if (ContextCompat.checkSelfPermission(
                     context,
                     Manifest.permission.READ_EXTERNAL_STORAGE
@@ -157,7 +155,6 @@ fun CascadeStreamerApp(
                         url = videoUrl
                     )
                     currentScreen.value = Screen.PLAYER
-                }
                 },
                 onBack = {
                     currentScreen.value = Screen.HOME
