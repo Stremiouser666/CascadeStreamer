@@ -25,7 +25,8 @@ fun HomeScreen(
     onPlaylistSelected: (Playlist) -> Unit,
     onSettingsClick: () -> Unit,
     onInfoClick: () -> Unit,
-    onOpenFileClick: () -> Unit = {}
+    onOpenFileClick: () -> Unit = {},
+    onSearchSeriesClick: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -65,6 +66,18 @@ fun HomeScreen(
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
         ) {
             Text("📁 Open File", color = Color.White, fontSize = 16.sp)
+        }
+        
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        Button(
+            onClick = onSearchSeriesClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+        ) {
+            Text("🔍 Search Series", color = Color.White, fontSize = 16.sp)
         }
         
         Spacer(modifier = Modifier.height(24.dp))

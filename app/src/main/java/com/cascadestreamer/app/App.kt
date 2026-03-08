@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.cascadestreamer.app.data.Video
+import com.cascadestreamer.app.managers.TVMazeShow
 import com.cascadestreamer.app.states.AppState
 import com.cascadestreamer.app.ui.HomeScreen
 import com.cascadestreamer.app.ui.SettingsScreen
@@ -20,9 +21,10 @@ import com.cascadestreamer.app.ui.QualitySelectionScreen
 import com.cascadestreamer.app.ui.SeriesDetailScreen
 import com.cascadestreamer.app.ui.SeriesData
 import com.cascadestreamer.app.ui.FileBrowserScreen
+import com.cascadestreamer.app.ui.SearchSeriesScreen
 
 enum class Screen {
-    HOME, SETTINGS, INFO, PLAYER, QUALITY, SERIES, FILE_BROWSER
+    HOME, SETTINGS, INFO, PLAYER, QUALITY, SERIES, FILE_BROWSER, SEARCH_SERIES
 }
 
 @Composable
@@ -88,6 +90,10 @@ fun CascadeStreamerApp(
                 } else {
                     permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
                 }
+                backPressCount.value = 0
+            },
+            onSearchSeriesClick = {
+                currentScreen.value = Screen.SEARCH_SERIES
                 backPressCount.value = 0
             }
         )
@@ -159,6 +165,19 @@ fun CascadeStreamerApp(
                     appState.playVideo(video)
                     selectedQuality.value = appState.loadSelectedQuality()
                     currentScreen.value = Screen.PLAYER
+                },
+                onBack = {
+                    currentScreen.value = Screen.HOME
+                    backPressCount.value = 0
+                }
+            )
+        }
+        
+        Screen.SEARCH_SERIES -> {
+            SearchSeriesScreen(
+                onSeriesSelected = { show ->
+                    selectedSeries.value = SeriesData(show = show)
+                    currentScreen.value = Screen.SERIES
                 },
                 onBack = {
                     currentScreen.value = Screen.HOME
