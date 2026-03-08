@@ -51,9 +51,12 @@ class AppState(
     }
     
     fun addVideo(video: Video) {
-        repository.addVideo(video)
-        _videos.value = repository.getVideos()
-        storageManager?.saveVideos(_videos.value)
+        val currentVideos = _videos.value.toMutableList()
+        if (!currentVideos.any { it.id == video.id }) {
+            currentVideos.add(0, video)
+            _videos.value = currentVideos
+            storageManager?.saveVideos(currentVideos)
+        }
     }
     
     fun createPlaylist(name: String) {
@@ -96,5 +99,3 @@ class AppState(
         return storageManager?.loadSelectedQuality() ?: "720p"
     }
 }
-
-    fun addVideo(video: Video) {
