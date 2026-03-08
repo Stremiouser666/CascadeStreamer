@@ -96,3 +96,13 @@ class AppState(
         return storageManager?.loadSelectedQuality() ?: "720p"
     }
 }
+
+    fun addVideo(video: Video) {
+        val currentVideos = videos.value.toMutableList()
+        if (!currentVideos.any { it.id == video.id }) {
+            currentVideos.add(0, video)
+            videos.value = currentVideos
+            storageManager.saveVideos(currentVideos)
+        }
+    }
+}

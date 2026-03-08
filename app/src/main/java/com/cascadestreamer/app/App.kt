@@ -149,11 +149,15 @@ fun CascadeStreamerApp(
                     } else {
                         "file://$filePath"
                     }
-                    selectedVideo.value = Video(
+                    val video = Video(
                         id = filePath,
                         title = filePath.substringAfterLast("/"),
                         url = videoUrl
                     )
+                    selectedVideo.value = video
+                    appState.addVideo(video)
+                    appState.playVideo(video)
+                    selectedQuality.value = appState.loadSelectedQuality()
                     currentScreen.value = Screen.PLAYER
                 },
                 onBack = {
