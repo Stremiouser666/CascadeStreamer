@@ -1,10 +1,11 @@
 package com.cascadestreamer.app.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -21,6 +22,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.cascadestreamer.app.managers.TVMazeEpisode
 import com.cascadestreamer.app.managers.TVMazeManager
@@ -46,6 +48,7 @@ fun SeriesDetailScreen(
     val isLoading = remember { mutableStateOf(false) }
     val tvMazeManager = remember { TVMazeManager() }
     val scope = rememberCoroutineScope()
+    val showDescriptionPopup = remember { mutableStateOf(false) }
     
     // Load all seasons on composition
     LaunchedEffect(series.show.id) {
@@ -158,7 +161,14 @@ fun SeriesDetailScreen(
                     it.replace("<[^>]*>".toRegex(), ""),
                     fontSize = 14.sp,
                     color = Color.LightGray,
-                    maxLines = 3
+                    maxLines = 3,
+                    modifier = Modifier.clickable { showDescriptionPopup.value = true }
+                )
+                Text(
+                    "Tap to expand ↕️",
+                    fontSize = 11.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
             }
         }
@@ -250,6 +260,15 @@ fun SeriesDetailScreen(
         )
         
         Spacer(modifier = Modifier.height(32.dp))
+    }
+    
+    // Description Popup
+    if (showDescriptionPopup.value) {
+        DescriptionPopup(
+            description = series.show.summary ?: "",
+            title = series.show.name,
+            onDismiss = { showDescriptionPopup.value = false }
+        )
     }
 }
 
