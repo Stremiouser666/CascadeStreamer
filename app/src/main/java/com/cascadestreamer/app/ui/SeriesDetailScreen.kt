@@ -9,8 +9,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,7 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.cascadestreamer.app.managers.TVMazeEpisode
+import com.cascadestreamer.app.managers.TVMazeManager
 import com.cascadestreamer.app.managers.TVMazeShow
+import kotlinx.coroutines.launch
 
 data class SeriesData(
     val show: TVMazeShow,
@@ -36,6 +40,36 @@ fun SeriesDetailScreen(
     onBack: () -> Unit
 ) {
     val selectedSeason = remember { mutableStateOf(1) }
+    val episodes = remember { mutableStateOf<List<TVMazeEpisode>>(emptyList()) }
+    val allSeasons = remember { mutableStateOf<List<Int>>(emptyList()) }
+    val isLoading = remember { mutableStateOf(false) }
+    val tvMazeManager = remember { TVMazeManager() }
+    val scope = rememberCoroutineScope()
+    
+    // Load all seasons on composition
+    LaunchedEffect(series.show.id) {
+        isLoading.value = true
+        scope.launch {
+            val allEpisodes = tvMazeManager.getShowEpisodes(series.show.id)
+            val seasons = allEpisodes.mapNotNull { it.season }.distinct().sorted()
+            allSeasons.value = seasons
+            
+            // Load Season 1 by default
+            if (seasons.isNotEmpty()) {
+                selectedSeason.value = seasons.first()
+                episodes.value = allEpisodes.filter { it.season == selectedSeason.value }
+            }
+            isLoading.value = false
+        }
+    }
+    
+    // Load episodes when season changes
+    LaunchedEffect(selectedSeason.value) {
+        scope.launch {
+            val allEpisodes = tvMazeManager.getShowEpisodes(series.show.id)
+            episodes.value = allEpisodes.filter { it.season == selectedSeason.value }
+        }
+    }
     
     Column(
         modifier = Modifier
@@ -131,13 +165,43 @@ fun SeriesDetailScreen(
         Spacer(modifier = Modifier.height(24.dp))
         
         // Season selector
-        Text(
-            "Season ${selectedSeason.value}",
-            fontSize = 18.sp,
-            color = Color.White,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(start = 16.dp)
-        )
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp)
+        ) {
+            Text(
+                "Select Season",
+                fontSize = 14.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            
+            if (isLoading.value) {
+                Text(
+                    "Loading seasons...",
+                    fontSize = 12.sp,
+                    color = Color.Gray
+                )
+            } else {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    allSeasons.value.forEach { season ->
+                        Button(
+                            onClick = { selectedSeason.value = season },
+                            modifier = Modifier.height(40.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (selectedSeason.value == season) Color(0xFF4CAF50) else Color.DarkGray
+                            )
+                        ) {
+                            Text("Season $season", fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+        }
         
         Spacer(modifier = Modifier.height(16.dp))
         
@@ -146,12 +210,21 @@ fun SeriesDetailScreen(
             modifier = Modifier.padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            series.episodes.forEachIndexed { index, episode ->
-                EpisodeCard(
-                    episode = episode,
-                    episodeNumber = index + 1,
-                    onClick = { /* Play episode */ }
+            if (episodes.value.isEmpty()) {
+                Text(
+                    "No episodes found",
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(16.dp)
                 )
+            } else {
+                episodes.value.forEach { episode ->
+                    EpisodeCard(
+                        episode = episode,
+                        episodeNumber = episode.number ?: 0,
+                        onClick = { /* Play episode */ }
+                    )
+                }
             }
         }
         
@@ -193,14 +266,14 @@ fun EpisodeCard(
             .padding(12.dp)
     ) {
         Text(
-            "$episodeNumber. ${episode.name}",
+            "E${episodeNumber}: ${episode.name}",
             fontSize = 16.sp,
             color = Color.White,
             fontWeight = FontWeight.Bold
         )
         
         Text(
-            "S${episode.season}E${episode.number} • ${episode.runtime ?: 0} min",
+            "Season ${episode.season} Episode ${episode.number} • ${episode.runtime ?: 0} min",
             fontSize = 12.sp,
             color = Color.Gray,
             modifier = Modifier.padding(top = 4.dp)
