@@ -2,7 +2,6 @@ package com.cascadestreamer.app.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -87,33 +86,36 @@ fun DescriptionPopup(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    .height(56.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
                     onClick = { if (fontSize.value > 10f) fontSize.value -= 2f },
-                    modifier = Modifier.size(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                    modifier = Modifier
+                        .width(56.dp)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                 ) {
-                    Text("−", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Text("−", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
                 }
                 
                 Text(
                     "Size: ${fontSize.value.toInt()}",
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    modifier = Modifier
-                        .weight(1f)
-                        .wrapContentWidth(Alignment.CenterHorizontally)
+                    fontSize = 14.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
                 )
                 
                 Button(
                     onClick = { if (fontSize.value < 24f) fontSize.value += 2f },
-                    modifier = Modifier.size(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                    modifier = Modifier
+                        .width(56.dp)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                 ) {
-                    Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Text("+", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
                 }
             }
             
