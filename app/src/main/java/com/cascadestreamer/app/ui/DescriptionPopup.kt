@@ -1,6 +1,7 @@
 package com.cascadestreamer.app.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -8,7 +9,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
-import androidx.compose.foundation.border
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -96,7 +96,7 @@ fun DescriptionPopup(
                     modifier = Modifier.size(48.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
                 ) {
-                    Text("−", color = Color.White, fontSize = 20.sp)
+                    Text("−", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 }
                 
                 Text(
@@ -113,7 +113,7 @@ fun DescriptionPopup(
                     modifier = Modifier.size(48.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
                 ) {
-                    Text("+", color = Color.White, fontSize = 20.sp)
+                    Text("+", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                 }
             }
             
