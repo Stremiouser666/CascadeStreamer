@@ -86,36 +86,35 @@ fun DescriptionPopup(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    .height(48.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Button(
                     onClick = { if (fontSize.value > 10f) fontSize.value -= 2f },
                     modifier = Modifier
-                        .width(56.dp)
-                        .height(56.dp),
+                        .weight(1f)
+                        .fillMaxHeight(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                 ) {
-                    Text("−", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                    Text("Smaller", color = Color.White, fontSize = 12.sp)
                 }
                 
                 Text(
                     "Size: ${fontSize.value.toInt()}",
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f)
+                    fontWeight = FontWeight.Bold
                 )
                 
                 Button(
                     onClick = { if (fontSize.value < 24f) fontSize.value += 2f },
                     modifier = Modifier
-                        .width(56.dp)
-                        .height(56.dp),
+                        .weight(1f)
+                        .fillMaxHeight(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                 ) {
-                    Text("+", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                    Text("Larger", color = Color.White, fontSize = 12.sp)
                 }
             }
             
