@@ -85,8 +85,7 @@ fun DescriptionPopup(
                     },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .height(36.dp)
-                        .border(2.dp, Color(0xFF2196F3)),
+                        .height(36.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
                 ) {
                     Icon(
@@ -125,8 +124,7 @@ fun DescriptionPopup(
                     },
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .height(36.dp)
-                        .border(2.dp, Color(0xFF2196F3)),
+                        .height(36.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
                 ) {
                     Icon(
@@ -154,8 +152,7 @@ fun DescriptionPopup(
                     onClick = { if (fontSize.value > 10f) fontSize.value -= 2f },
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
-                        .border(2.dp, Color.DarkGray),
+                        .fillMaxHeight(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                 ) {
                     Icon(
@@ -177,8 +174,7 @@ fun DescriptionPopup(
                     onClick = { if (fontSize.value < 24f) fontSize.value += 2f },
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight()
-                        .border(2.dp, Color.DarkGray),
+                        .fillMaxHeight(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                 ) {
                     Icon(
@@ -197,8 +193,7 @@ fun DescriptionPopup(
                 onClick = onDismiss,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp)
-                    .border(2.dp, Color.DarkGray),
+                    .height(48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
             ) {
                 Text("Close", color = Color.White, fontSize = 14.sp)
