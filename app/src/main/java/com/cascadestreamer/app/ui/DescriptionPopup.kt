@@ -5,8 +5,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.filled.ZoomIn
+import androidx.compose.material.icons.filled.ZoomOut
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +32,7 @@ fun DescriptionPopup(
     onDismiss: () -> Unit
 ) {
     val fontSize = remember { mutableStateOf(14f) }
+    val scrollState = rememberScrollState()
     val cleanDescription = description.replace("<[^>]*>".toRegex(), "")
     
     Dialog(
@@ -65,12 +72,29 @@ fun DescriptionPopup(
             
             Spacer(modifier = Modifier.height(12.dp))
             
+            // Scroll up indicator
+            if (scrollState.value > 0) {
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Filled.ArrowDropUp,
+                        contentDescription = "Scroll up",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text("Scroll up", fontSize = 10.sp, color = Color.Gray)
+                }
+            }
+            
             // Description text (scrollable)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .verticalScroll(rememberScrollState())
+                    .verticalScroll(scrollState)
             ) {
                 Text(
                     cleanDescription,
@@ -80,9 +104,26 @@ fun DescriptionPopup(
                 )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            // Scroll down indicator
+            if (scrollState.value < scrollState.maxValue) {
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Filled.ArrowDropDown,
+                        contentDescription = "Scroll down",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Text("Scroll down", fontSize = 10.sp, color = Color.Gray)
+                }
+            }
             
-            // Font size controls
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Font size controls with icons
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -97,7 +138,12 @@ fun DescriptionPopup(
                         .fillMaxHeight(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                 ) {
-                    Text("Smaller", color = Color.White, fontSize = 12.sp)
+                    Icon(
+                        Icons.Filled.ZoomOut,
+                        contentDescription = "Smaller",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
                 
                 Text(
@@ -114,7 +160,12 @@ fun DescriptionPopup(
                         .fillMaxHeight(),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                 ) {
-                    Text("Larger", color = Color.White, fontSize = 12.sp)
+                    Icon(
+                        Icons.Filled.ZoomIn,
+                        contentDescription = "Larger",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
                 }
             }
             
