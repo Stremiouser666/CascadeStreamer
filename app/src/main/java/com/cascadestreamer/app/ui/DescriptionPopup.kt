@@ -37,7 +37,7 @@ fun DescriptionPopup(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth(0.95f)
+                .fillMaxWidth(0.75f)
                 .fillMaxHeight(0.9f)
                 .background(Color.Black)
                 .border(2.dp, Color.DarkGray)
