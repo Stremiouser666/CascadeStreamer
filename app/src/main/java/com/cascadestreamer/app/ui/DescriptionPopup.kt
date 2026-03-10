@@ -5,10 +5,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -17,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.material.icons.Icons
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -80,7 +80,7 @@ fun DescriptionPopup(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        Icons.Filled.ArrowUpward,
+                        Icons.Filled.ArrowDropUp,
                         contentDescription = "Scroll up",
                         tint = Color.Gray,
                         modifier = Modifier.size(20.dp)
@@ -112,7 +112,7 @@ fun DescriptionPopup(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        Icons.Filled.ArrowDownward,
+                        Icons.Filled.ArrowDropDown,
                         contentDescription = "Scroll down",
                         tint = Color.Gray,
                         modifier = Modifier.size(20.dp)
@@ -123,7 +123,7 @@ fun DescriptionPopup(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // Font size controls with icons
+            // Font size controls
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
