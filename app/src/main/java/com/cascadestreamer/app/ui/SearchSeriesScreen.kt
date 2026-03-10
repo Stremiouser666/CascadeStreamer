@@ -17,6 +17,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
@@ -35,6 +36,7 @@ fun SearchSeriesScreen(
     val isSearching = remember { mutableStateOf(false) }
     val tvMazeManager = remember { TVMazeManager() }
     val scope = rememberCoroutineScope()
+    val keyboardController = LocalSoftwareKeyboardController.current
     
     Column(
         modifier = Modifier
@@ -50,7 +52,7 @@ fun SearchSeriesScreen(
             modifier = Modifier.padding(bottom = 16.dp)
         )
         
-        // Search input area - TV friendly
+        // Search input area - TV friendly (keyboard disabled)
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -77,13 +79,14 @@ fun SearchSeriesScreen(
                     unfocusedTextColor = Color.White
                 ),
                 singleLine = true,
-                imeAction = ImeAction.Search
+                imeAction = ImeAction.None
             )
         }
         
-        // Search button - Always accessible
+        // Search button - Always accessible (keyboard hidden)
         Button(
             onClick = {
+                keyboardController?.hide()
                 if (searchQuery.value.isNotBlank()) {
                     isSearching.value = true
                     scope.launch {
