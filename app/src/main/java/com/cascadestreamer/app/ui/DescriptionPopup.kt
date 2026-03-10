@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
@@ -16,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import kotlinx.coroutines.launch
 
 @Composable
 fun DescriptionPopup(
@@ -33,6 +36,7 @@ fun DescriptionPopup(
 ) {
     val fontSize = remember { mutableStateOf(14f) }
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
     val cleanDescription = description.replace("<[^>]*>".toRegex(), "")
     
     Dialog(
@@ -72,20 +76,28 @@ fun DescriptionPopup(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            // Scroll up indicator
+            // Scroll up button
             if (scrollState.value > 0) {
-                Row(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                Button(
+                    onClick = {
+                        scope.launch {
+                            scrollState.animateScrollTo(maxOf(0, scrollState.value - 100))
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .height(36.dp)
+                        .border(2.dp, Color(0xFF2196F3)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
                 ) {
                     Icon(
                         Icons.Filled.ArrowDropUp,
                         contentDescription = "Scroll up",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(20.dp)
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
                     )
-                    Text("Scroll up", fontSize = 10.sp, color = Color.Gray)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Scroll up", fontSize = 10.sp, color = Color.White)
                 }
             }
             
@@ -104,20 +116,28 @@ fun DescriptionPopup(
                 )
             }
             
-            // Scroll down indicator
+            // Scroll down button
             if (scrollState.value < scrollState.maxValue) {
-                Row(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                Button(
+                    onClick = {
+                        scope.launch {
+                            scrollState.animateScrollTo(minOf(scrollState.maxValue, scrollState.value + 100))
+                        }
+                    },
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .height(36.dp)
+                        .border(2.dp, Color(0xFF2196F3)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
                 ) {
                     Icon(
                         Icons.Filled.ArrowDropDown,
                         contentDescription = "Scroll down",
-                        tint = Color.Gray,
-                        modifier = Modifier.size(20.dp)
+                        tint = Color.White,
+                        modifier = Modifier.size(18.dp)
                     )
-                    Text("Scroll down", fontSize = 10.sp, color = Color.Gray)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Scroll down", fontSize = 10.sp, color = Color.White)
                 }
             }
             
@@ -135,7 +155,8 @@ fun DescriptionPopup(
                     onClick = { if (fontSize.value > 10f) fontSize.value -= 2f },
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(),
+                        .fillMaxHeight()
+                        .border(2.dp, Color.DarkGray),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                 ) {
                     Icon(
@@ -157,7 +178,8 @@ fun DescriptionPopup(
                     onClick = { if (fontSize.value < 24f) fontSize.value += 2f },
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(),
+                        .fillMaxHeight()
+                        .border(2.dp, Color.DarkGray),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                 ) {
                     Icon(
@@ -176,7 +198,8 @@ fun DescriptionPopup(
                 onClick = onDismiss,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
+                    .height(48.dp)
+                    .border(2.dp, Color.DarkGray),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
             ) {
                 Text("Close", color = Color.White, fontSize = 14.sp)
