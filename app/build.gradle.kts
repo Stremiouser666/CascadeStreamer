@@ -53,6 +53,7 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.11.0")
+    implementation("androidx.compose.material:material-icons-extended:1.5.3")
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("androidx.media3:media3-common:1.1.1")
     
@@ -64,4 +65,3 @@ dependencies {
     // Coil image loading
 
     // Material Icons Extended
-    implementation("androidx.compose.material:material-icons-extended")
