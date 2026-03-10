@@ -17,9 +17,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cascadestreamer.app.managers.TVMazeManager
@@ -36,7 +35,6 @@ fun SearchSeriesScreen(
     val isSearching = remember { mutableStateOf(false) }
     val tvMazeManager = remember { TVMazeManager() }
     val scope = rememberCoroutineScope()
-    val keyboardController = LocalSoftwareKeyboardController.current
     
     Column(
         modifier = Modifier
@@ -52,7 +50,7 @@ fun SearchSeriesScreen(
             modifier = Modifier.padding(bottom = 16.dp)
         )
         
-        // Search input area - TV friendly (keyboard disabled)
+        // Search input area - TV friendly
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -78,15 +76,13 @@ fun SearchSeriesScreen(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White
                 ),
-                singleLine = true,
-                imeAction = ImeAction.None
+                singleLine = true
             )
         }
         
-        // Search button - Always accessible (keyboard hidden)
+        // Search button - Always accessible
         Button(
             onClick = {
-                keyboardController?.hide()
                 if (searchQuery.value.isNotBlank()) {
                     isSearching.value = true
                     scope.launch {
