@@ -6,10 +6,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.ArrowDropUp
-import androidx.compose.material.icons.filled.ZoomIn
-import androidx.compose.material.icons.filled.ZoomOut
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -80,7 +80,7 @@ fun DescriptionPopup(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        Icons.Filled.ArrowDropUp,
+                        Icons.Filled.ArrowUpward,
                         contentDescription = "Scroll up",
                         tint = Color.Gray,
                         modifier = Modifier.size(20.dp)
@@ -112,7 +112,7 @@ fun DescriptionPopup(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
-                        Icons.Filled.ArrowDropDown,
+                        Icons.Filled.ArrowDownward,
                         contentDescription = "Scroll down",
                         tint = Color.Gray,
                         modifier = Modifier.size(20.dp)
@@ -139,7 +139,7 @@ fun DescriptionPopup(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                 ) {
                     Icon(
-                        Icons.Filled.ZoomOut,
+                        Icons.Filled.Remove,
                         contentDescription = "Smaller",
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
@@ -161,7 +161,7 @@ fun DescriptionPopup(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
                 ) {
                     Icon(
-                        Icons.Filled.ZoomIn,
+                        Icons.Filled.Add,
                         contentDescription = "Larger",
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
