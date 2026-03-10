@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cascadestreamer.app.managers.TVMazeManager
@@ -49,48 +50,59 @@ fun SearchSeriesScreen(
             modifier = Modifier.padding(bottom = 16.dp)
         )
         
-        Row(
+        // Search input area - TV friendly
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(bottom = 16.dp)
         ) {
+            Text(
+                "Enter show name:",
+                fontSize = 12.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            
             TextField(
                 value = searchQuery.value,
                 onValueChange = { searchQuery.value = it },
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                placeholder = { Text("Show name...") },
+                    .fillMaxWidth()
+                    .height(56.dp),
+                placeholder = { Text("e.g., Breaking Bad") },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.DarkGray,
                     unfocusedContainerColor = Color.DarkGray,
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White
-                )
+                ),
+                singleLine = true,
+                imeAction = ImeAction.Search
             )
-            
-            Button(
-                onClick = {
-                    if (searchQuery.value.isNotBlank()) {
-                        isSearching.value = true
-                        scope.launch {
-                            searchResults.value = tvMazeManager.searchShows(searchQuery.value)
-                            isSearching.value = false
-                        }
+        }
+        
+        // Search button - Always accessible
+        Button(
+            onClick = {
+                if (searchQuery.value.isNotBlank()) {
+                    isSearching.value = true
+                    scope.launch {
+                        searchResults.value = tvMazeManager.searchShows(searchQuery.value)
+                        isSearching.value = false
                     }
-                },
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .width(80.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
-            ) {
-                Text("Search", fontSize = 14.sp)
-            }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+        ) {
+            Text("🔍 Search", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
         }
         
         Spacer(modifier = Modifier.height(16.dp))
         
+        // Results
         if (isSearching.value) {
             Text(
                 "Searching...",
@@ -105,7 +117,7 @@ fun SearchSeriesScreen(
                 color = Color.Gray,
                 modifier = Modifier.padding(16.dp)
             )
-        } else {
+        } else if (searchResults.value.isNotEmpty()) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -120,10 +132,18 @@ fun SearchSeriesScreen(
                     )
                 }
             }
+        } else {
+            Text(
+                "Enter a show name and tap Search",
+                fontSize = 14.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(16.dp)
+            )
         }
         
         Spacer(modifier = Modifier.height(16.dp))
         
+        // Back button
         Button(
             onClick = onBack,
             modifier = Modifier
