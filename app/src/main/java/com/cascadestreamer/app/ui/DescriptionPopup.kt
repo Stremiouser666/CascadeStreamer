@@ -1,34 +1,21 @@
 package com.cascadestreamer.app.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.drawBehind
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.drawCircle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -59,7 +46,6 @@ fun DescriptionPopup(
                 .border(2.dp, Color.DarkGray)
                 .padding(24.dp)
         ) {
-
             Column(modifier = Modifier.fillMaxSize()) {
 
                 // Header
@@ -93,7 +79,7 @@ fun DescriptionPopup(
                         )
                     }
 
-                    // Top fade for scroll - clickable (more prominent)
+                    // Top fade for scroll - clickable
                     if (scrollState.value > 0) {
                         Box(
                             modifier = Modifier
@@ -115,7 +101,7 @@ fun DescriptionPopup(
                         )
                     }
 
-                    // Bottom fade for scroll - clickable (more prominent)
+                    // Bottom fade for scroll - clickable
                     if (scrollState.value < scrollState.maxValue) {
                         Box(
                             modifier = Modifier
@@ -140,7 +126,7 @@ fun DescriptionPopup(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Floating zoom controls with opacity + glow feedback
+                // Floating zoom controls
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -148,31 +134,10 @@ fun DescriptionPopup(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Smaller button
-                    val smallerInteractionSource = remember { MutableInteractionSource() }
-                    val smallerPressed by smallerInteractionSource.collectIsPressedAsState()
-                    val smallerFocused by smallerInteractionSource.collectIsFocusedAsState()
-                    
-                    FloatingActionButton(
-                        onClick = { if (fontSize > 10f) fontSize -= 2f },
-                        containerColor = if (smallerPressed || smallerFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f),
-                        interactionSource = smallerInteractionSource,
-                        modifier = if (smallerFocused) {
-                            Modifier
-                                .border(3.dp, Color.White, FloatingActionButtonDefaults.shape)
-                                .padding(2.dp)
-                                .drawBehind {
-                                    drawCircle(
-                                        color = Color(0xFF2196F3).copy(alpha = 0.4f),
-                                        radius = size.maxDimension / 1.2f
-                                    )
-                                }
-                        } else {
-                            Modifier
-                        }
-                    ) {
-                        Icon(Icons.Filled.Remove, contentDescription = "Smaller", tint = Color.White)
-                    }
+                    ZoomButton(
+                        icon = Icons.Filled.Remove,
+                        onClick = { if (fontSize > 10f) fontSize -= 2f }
+                    )
 
                     Text(
                         "${fontSize.toInt()} pt",
@@ -180,65 +145,72 @@ fun DescriptionPopup(
                         fontWeight = FontWeight.Bold
                     )
 
-                    // Larger button
-                    val largerInteractionSource = remember { MutableInteractionSource() }
-                    val largerPressed by largerInteractionSource.collectIsPressedAsState()
-                    val largerFocused by largerInteractionSource.collectIsFocusedAsState()
-                    
-                    FloatingActionButton(
-                        onClick = { if (fontSize < 24f) fontSize += 2f },
-                        containerColor = if (largerPressed || largerFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f),
-                        interactionSource = largerInteractionSource,
-                        modifier = if (largerFocused) {
-                            Modifier
-                                .border(3.dp, Color.White, FloatingActionButtonDefaults.shape)
-                                .padding(2.dp)
-                                .drawBehind {
-                                    drawCircle(
-                                        color = Color(0xFF2196F3).copy(alpha = 0.4f),
-                                        radius = size.maxDimension / 1.2f
-                                    )
-                                }
-                        } else {
-                            Modifier
-                        }
-                    ) {
-                        Icon(Icons.Filled.Add, contentDescription = "Larger", tint = Color.White)
-                    }
+                    ZoomButton(
+                        icon = Icons.Filled.Add,
+                        onClick = { if (fontSize < 24f) fontSize += 2f }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Close button with opacity + glow feedback
-                val closeInteractionSource = remember { MutableInteractionSource() }
-                val closePressed by closeInteractionSource.collectIsPressedAsState()
-                val closeFocused by closeInteractionSource.collectIsFocusedAsState()
+                // Close button
+                val closeSource = remember { MutableInteractionSource() }
+                val closeFocused by closeSource.collectIsFocusedAsState()
                 
                 Button(
                     onClick = onDismiss,
+                    interactionSource = closeSource,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .then(if (closeFocused) {
-                            Modifier
-                                .border(3.dp, Color.White)
-                                .padding(2.dp)
-                                .drawBehind {
-                                    drawCircle(
-                                        color = Color(0xFF2196F3).copy(alpha = 0.4f),
-                                        radius = size.maxDimension / 2f
-                                    )
-                                }
-                        } else {
-                            Modifier
-                        }),
+                        .then(
+                            if (closeFocused) {
+                                Modifier
+                                    .border(3.dp, Color.White)
+                                    .padding(2.dp)
+                                    .drawBehind {
+                                        drawCircle(
+                                            color = Color(0xFF2196F3).copy(alpha = 0.4f),
+                                            radius = this.size.maxDimension / 2f
+                                        )
+                                    }
+                            } else Modifier
+                        ),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (closePressed || closeFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f)
-                    ),
-                    interactionSource = closeInteractionSource
+                        containerColor = if (closeFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f)
+                    )
                 ) {
                     Text("Close", color = Color.White)
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ZoomButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    val source = remember { MutableInteractionSource() }
+    val isFocused by source.collectIsFocusedAsState()
+
+    FloatingActionButton(
+        onClick = onClick,
+        interactionSource = source,
+        containerColor = if (isFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f),
+        modifier = Modifier
+            .size(56.dp)
+            .then(
+                if (isFocused) {
+                    Modifier
+                        .border(3.dp, Color.White, FloatingActionButtonDefaults.shape)
+                        .padding(2.dp)
+                        .drawBehind {
+                            drawCircle(
+                                color = Color(0xFF2196F3).copy(alpha = 0.4f),
+                                radius = this.size.maxDimension / 1.2f
+                            )
+                        }
+                } else Modifier
+            )
+    ) {
+        Icon(icon, contentDescription = null, tint = Color.White)
     }
 }
