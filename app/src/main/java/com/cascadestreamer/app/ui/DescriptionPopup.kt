@@ -3,6 +3,9 @@ package com.cascadestreamer.app.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -132,7 +135,7 @@ fun DescriptionPopup(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Floating zoom controls
+                // Floating zoom controls with opacity feedback
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -140,9 +143,15 @@ fun DescriptionPopup(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Smaller button
+                    val smallerInteractionSource = remember { MutableInteractionSource() }
+                    val smallerPressed by smallerInteractionSource.collectIsPressedAsState()
+                    val smallerFocused by smallerInteractionSource.collectIsFocusedAsState()
+                    
                     FloatingActionButton(
                         onClick = { if (fontSize > 10f) fontSize -= 2f },
-                        containerColor = Color(0xFF2196F3)
+                        containerColor = if (smallerPressed || smallerFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f),
+                        interactionSource = smallerInteractionSource
                     ) {
                         Icon(Icons.Filled.Remove, contentDescription = "Smaller", tint = Color.White)
                     }
@@ -153,9 +162,15 @@ fun DescriptionPopup(
                         fontWeight = FontWeight.Bold
                     )
 
+                    // Larger button
+                    val largerInteractionSource = remember { MutableInteractionSource() }
+                    val largerPressed by largerInteractionSource.collectIsPressedAsState()
+                    val largerFocused by largerInteractionSource.collectIsFocusedAsState()
+                    
                     FloatingActionButton(
                         onClick = { if (fontSize < 24f) fontSize += 2f },
-                        containerColor = Color(0xFF2196F3)
+                        containerColor = if (largerPressed || largerFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f),
+                        interactionSource = largerInteractionSource
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = "Larger", tint = Color.White)
                     }
@@ -163,11 +178,18 @@ fun DescriptionPopup(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Close button
+                // Close button with opacity feedback
+                val closeInteractionSource = remember { MutableInteractionSource() }
+                val closePressed by closeInteractionSource.collectIsPressedAsState()
+                val closeFocused by closeInteractionSource.collectIsFocusedAsState()
+                
                 Button(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2196F3))
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (closePressed || closeFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f)
+                    ),
+                    interactionSource = closeInteractionSource
                 ) {
                     Text("Close", color = Color.White)
                 }
