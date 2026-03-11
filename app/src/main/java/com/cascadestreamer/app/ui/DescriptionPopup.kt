@@ -163,17 +163,7 @@ fun DescriptionPopup(
                     modifier = Modifier
                         .fillMaxWidth()
                         .then(
-                            if (closeFocused) {
-                                Modifier
-                                    .border(3.dp, Color.White)
-                                    .padding(2.dp)
-                                    .drawBehind {
-                                        drawCircle(
-                                            color = Color(0xFF2196F3).copy(alpha = 0.4f),
-                                            radius = this.size.maxDimension / 3.5f
-                                        )
-                                    }
-                            } else Modifier
+                    if (closeFocused) Modifier.border(3.dp, Color.White) else Modifier
                         ),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (closeFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f)
