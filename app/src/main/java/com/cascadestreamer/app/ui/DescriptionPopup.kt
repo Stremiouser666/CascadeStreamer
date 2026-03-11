@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.focus.focusable
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.*
@@ -70,6 +71,7 @@ fun DescriptionPopup(
                             .fillMaxSize()
                             .verticalScroll(scrollState)
                             .padding(horizontal = 4.dp)
+                            .focusable()
                     ) {
                         Text(
                             cleanDescription,
@@ -162,6 +164,7 @@ fun DescriptionPopup(
                     interactionSource = closeSource,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .focusable()
                         .then(
                             if (closeFocused) {
                                 Modifier
@@ -170,7 +173,7 @@ fun DescriptionPopup(
                                     .drawBehind {
                                         drawCircle(
                                             color = Color(0xFF2196F3).copy(alpha = 0.4f),
-                                            radius = this.size.maxDimension / 2f
+                                            radius = this.size.maxDimension / 3.5f
                                         )
                                     }
                             } else Modifier
@@ -197,6 +200,7 @@ fun ZoomButton(icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: (
         containerColor = if (isFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f),
         modifier = Modifier
             .size(56.dp)
+            .focusable()
             .then(
                 if (isFocused) {
                     Modifier
