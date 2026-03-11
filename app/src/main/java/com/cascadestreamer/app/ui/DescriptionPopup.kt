@@ -44,8 +44,9 @@ fun DescriptionPopup(
     Dialog(onDismissRequest = onDismiss) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.95f)
+                .fillMaxWidth()
                 .fillMaxHeight(0.9f)
+                .padding(horizontal = 20.dp)
                 .background(Color(0xFF121212))
                 .border(2.dp, Color.DarkGray)
                 .padding(16.dp)
