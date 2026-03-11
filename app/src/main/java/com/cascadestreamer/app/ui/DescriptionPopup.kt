@@ -44,7 +44,7 @@ fun DescriptionPopup(
     Dialog(onDismissRequest = onDismiss) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.85f)
+                .fillMaxWidth(0.95f)
                 .fillMaxHeight(0.9f)
                 .background(Color(0xFF121212))
                 .border(2.dp, Color.DarkGray)
@@ -84,15 +84,16 @@ fun DescriptionPopup(
                         )
                     }
 
-                    // Top fade for scroll - clickable
+                    // Top fade for scroll - clickable (more prominent)
                     if (scrollState.value > 0) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(24.dp)
+                                .height(40.dp)
                                 .background(
                                     brush = Brush.verticalGradient(
                                         0f to Color(0xFF121212),
+                                        0.7f to Color(0xFF121212).copy(alpha = 0.3f),
                                         1f to Color.Transparent
                                     )
                                 )
@@ -105,15 +106,16 @@ fun DescriptionPopup(
                         )
                     }
 
-                    // Bottom fade for scroll - clickable
+                    // Bottom fade for scroll - clickable (more prominent)
                     if (scrollState.value < scrollState.maxValue) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(24.dp)
+                                .height(40.dp)
                                 .background(
                                     brush = Brush.verticalGradient(
                                         0f to Color.Transparent,
+                                        0.3f to Color(0xFF121212).copy(alpha = 0.3f),
                                         1f to Color(0xFF121212)
                                     )
                                 )
