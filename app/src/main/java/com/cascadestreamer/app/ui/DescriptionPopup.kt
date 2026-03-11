@@ -3,6 +3,7 @@ package com.cascadestreamer.app.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.drawBehind
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.launch
 
 @Composable
@@ -44,15 +47,17 @@ fun DescriptionPopup(
     val scope = rememberCoroutineScope()
     val cleanDescription = description.replace("<[^>]*>".toRegex(), "")
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .fillMaxHeight(0.9f)
-                .padding(horizontal = 20.dp)
+                .fillMaxWidth(0.9f)
+                .fillMaxHeight(0.85f)
                 .background(Color(0xFF121212))
                 .border(2.dp, Color.DarkGray)
-                .padding(16.dp)
+                .padding(24.dp)
         ) {
 
             Column(modifier = Modifier.fillMaxSize()) {
@@ -135,7 +140,7 @@ fun DescriptionPopup(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Floating zoom controls with opacity feedback
+                // Floating zoom controls with opacity + glow feedback
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -151,7 +156,20 @@ fun DescriptionPopup(
                     FloatingActionButton(
                         onClick = { if (fontSize > 10f) fontSize -= 2f },
                         containerColor = if (smallerPressed || smallerFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f),
-                        interactionSource = smallerInteractionSource
+                        interactionSource = smallerInteractionSource,
+                        modifier = if (smallerFocused) {
+                            Modifier
+                                .border(3.dp, Color.White, FloatingActionButtonDefaults.shape)
+                                .padding(2.dp)
+                                .drawBehind {
+                                    drawCircle(
+                                        color = Color(0xFF2196F3).copy(alpha = 0.4f),
+                                        radius = size.maxDimension / 1.2f
+                                    )
+                                }
+                        } else {
+                            Modifier
+                        }
                     ) {
                         Icon(Icons.Filled.Remove, contentDescription = "Smaller", tint = Color.White)
                     }
@@ -170,7 +188,20 @@ fun DescriptionPopup(
                     FloatingActionButton(
                         onClick = { if (fontSize < 24f) fontSize += 2f },
                         containerColor = if (largerPressed || largerFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f),
-                        interactionSource = largerInteractionSource
+                        interactionSource = largerInteractionSource,
+                        modifier = if (largerFocused) {
+                            Modifier
+                                .border(3.dp, Color.White, FloatingActionButtonDefaults.shape)
+                                .padding(2.dp)
+                                .drawBehind {
+                                    drawCircle(
+                                        color = Color(0xFF2196F3).copy(alpha = 0.4f),
+                                        radius = size.maxDimension / 1.2f
+                                    )
+                                }
+                        } else {
+                            Modifier
+                        }
                     ) {
                         Icon(Icons.Filled.Add, contentDescription = "Larger", tint = Color.White)
                     }
@@ -178,14 +209,28 @@ fun DescriptionPopup(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Close button with opacity feedback
+                // Close button with opacity + glow feedback
                 val closeInteractionSource = remember { MutableInteractionSource() }
                 val closePressed by closeInteractionSource.collectIsPressedAsState()
                 val closeFocused by closeInteractionSource.collectIsFocusedAsState()
                 
                 Button(
                     onClick = onDismiss,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .then(if (closeFocused) {
+                            Modifier
+                                .border(3.dp, Color.White)
+                                .padding(2.dp)
+                                .drawBehind {
+                                    drawCircle(
+                                        color = Color(0xFF2196F3).copy(alpha = 0.4f),
+                                        radius = size.maxDimension / 2f
+                                    )
+                                }
+                        } else {
+                            Modifier
+                        }),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (closePressed || closeFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f)
                     ),
