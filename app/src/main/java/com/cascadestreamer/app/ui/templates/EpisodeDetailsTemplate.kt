@@ -2,9 +2,17 @@ package com.cascadestreamer.app.ui.templates
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.outlined.RadioButtonUnchecked
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -18,7 +26,6 @@ import coil.compose.AsyncImage
 import com.cascadestreamer.app.managers.TVMazeEpisode
 import com.cascadestreamer.app.ui.DescriptionPopup
 import com.cascadestreamer.app.ui.components.ImageFullscreenViewer
-import com.cascadestreamer.app.ui.components.WatchedToggle
 
 @Composable
 fun EpisodeDetailsTemplate(
@@ -50,10 +57,20 @@ fun EpisodeDetailsTemplate(
                 modifier = Modifier.weight(1f)
             )
             
-            WatchedToggle(
-                isWatched = isWatched,
-                onToggle = onWatchedToggle
-            )
+            // Watched toggle inline
+            val watchedSource = remember { MutableInteractionSource() }
+            val watchedFocused by watchedSource.collectIsFocusedAsState()
+            
+            IconButton(
+                onClick = { onWatchedToggle(!isWatched) },
+                interactionSource = watchedSource
+            ) {
+                Icon(
+                    imageVector = if (isWatched) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
+                    contentDescription = if (isWatched) "Mark as unwatched" else "Mark as watched",
+                    tint = if (watchedFocused) Color(0xFF4CAF50) else if (isWatched) Color(0xFF4CAF50) else Color.Gray
+                )
+            }
         }
         
         // Episode metadata
