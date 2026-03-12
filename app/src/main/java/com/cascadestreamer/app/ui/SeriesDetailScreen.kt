@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,6 +14,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,7 +52,7 @@ fun SeriesDetailScreen(
     val tvMazeManager = remember { TVMazeManager() }
     val scope = rememberCoroutineScope()
     val showDescriptionPopup = remember { mutableStateOf(false) }
-    
+
     // Load all seasons on composition
     LaunchedEffect(series.show.id) {
         isLoading.value = true
@@ -57,7 +60,7 @@ fun SeriesDetailScreen(
             val allEpisodes = tvMazeManager.getShowEpisodes(series.show.id)
             val seasons = allEpisodes.mapNotNull { it.season }.distinct().sorted()
             allSeasons.value = seasons
-            
+
             // Load Season 1 by default
             if (seasons.isNotEmpty()) {
                 selectedSeason.value = seasons.first()
@@ -66,7 +69,7 @@ fun SeriesDetailScreen(
             isLoading.value = false
         }
     }
-    
+
     // Load episodes when season changes
     LaunchedEffect(selectedSeason.value) {
         scope.launch {
@@ -74,7 +77,7 @@ fun SeriesDetailScreen(
             episodes.value = allEpisodes.filter { it.season == selectedSeason.value }
         }
     }
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -96,7 +99,7 @@ fun SeriesDetailScreen(
                     contentScale = ContentScale.Crop
                 )
             }
-            
+
             // Title overlay
             Box(
                 modifier = Modifier
@@ -113,37 +116,51 @@ fun SeriesDetailScreen(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
-        // Play button + action buttons
+
+        // Play button + action buttons with opacity feedback
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Play button
+            val playSource = remember { MutableInteractionSource() }
+            val playFocused by playSource.collectIsFocusedAsState()
+            
             Button(
                 onClick = onPlay,
+                interactionSource = playSource,
                 modifier = Modifier
                     .weight(1f)
                     .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (playFocused) Color(0xFF4CAF50) else Color(0xFF4CAF50).copy(alpha = 0.6f)
+                )
             ) {
                 Text("▶ Play", color = Color.White, fontSize = 16.sp)
             }
+
+            // Heart button
+            val heartSource = remember { MutableInteractionSource() }
+            val heartFocused by heartSource.collectIsFocusedAsState()
             
             Button(
                 onClick = {},
+                interactionSource = heartSource,
                 modifier = Modifier.size(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (heartFocused) Color.LightGray else Color.DarkGray
+                )
             ) {
                 Text("♡", color = Color.White, fontSize = 20.sp)
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Metadata
         Column(
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -153,9 +170,9 @@ fun SeriesDetailScreen(
                 fontSize = 12.sp,
                 color = Color.Gray
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             series.show.summary?.let {
                 Text(
                     it.replace("<[^>]*>".toRegex(), ""),
@@ -172,9 +189,9 @@ fun SeriesDetailScreen(
                 )
             }
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         // Season selector
         Column(
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -185,7 +202,7 @@ fun SeriesDetailScreen(
                 color = Color.Gray,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
-            
+
             if (isLoading.value) {
                 Text(
                     "Loading seasons...",
@@ -200,11 +217,19 @@ fun SeriesDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     allSeasons.value.forEach { season ->
+                        val seasonSource = remember { MutableInteractionSource() }
+                        val seasonFocused by seasonSource.collectIsFocusedAsState()
+                        
                         Button(
                             onClick = { selectedSeason.value = season },
+                            interactionSource = seasonSource,
                             modifier = Modifier.height(40.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (selectedSeason.value == season) Color(0xFF4CAF50) else Color.DarkGray
+                                containerColor = when {
+                                    selectedSeason.value == season -> Color(0xFF4CAF50)
+                                    seasonFocused -> Color.Gray
+                                    else -> Color.DarkGray
+                                }
                             )
                         ) {
                             Text("Season $season", fontSize = 12.sp)
@@ -213,9 +238,9 @@ fun SeriesDetailScreen(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Episodes list
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
@@ -238,9 +263,9 @@ fun SeriesDetailScreen(
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         // Cast & Crew (placeholder)
         Text(
             "Cast & Crew",
@@ -249,19 +274,19 @@ fun SeriesDetailScreen(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(start = 16.dp)
         )
-        
+
         Spacer(modifier = Modifier.height(12.dp))
-        
+
         Text(
             "Cast info coming soon",
             fontSize = 12.sp,
             color = Color.Gray,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
-        
+
         Spacer(modifier = Modifier.height(32.dp))
     }
-    
+
     // Description Popup
     if (showDescriptionPopup.value) {
         DescriptionPopup(
@@ -291,14 +316,14 @@ fun EpisodeCard(
             color = Color.White,
             fontWeight = FontWeight.Bold
         )
-        
+
         Text(
             "Season ${episode.season} Episode ${episode.number} • ${episode.runtime ?: 0} min",
             fontSize = 12.sp,
             color = Color.Gray,
             modifier = Modifier.padding(top = 4.dp)
         )
-        
+
         episode.summary?.let {
             Text(
                 it.replace("<[^>]*>".toRegex(), ""),
