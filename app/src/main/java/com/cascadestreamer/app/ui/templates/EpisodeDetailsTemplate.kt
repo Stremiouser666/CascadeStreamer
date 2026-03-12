@@ -19,7 +19,6 @@ import com.cascadestreamer.app.managers.TVMazeEpisode
 import com.cascadestreamer.app.ui.DescriptionPopup
 import com.cascadestreamer.app.ui.components.ImageFullscreenViewer
 import com.cascadestreamer.app.ui.components.WatchedToggle
-import com.cascadestreamer.app.ui.components.WatchedToggle
 
 @Composable
 fun EpisodeDetailsTemplate(
