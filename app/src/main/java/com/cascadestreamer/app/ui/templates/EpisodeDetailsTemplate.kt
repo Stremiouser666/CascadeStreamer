@@ -9,12 +9,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.Trash
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,7 +25,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.drawRect
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -193,7 +195,7 @@ fun EpisodeDetailsTemplate(
                         modifier = Modifier.weight(1f)
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Trash,
+                            imageVector = Icons.Filled.Delete,
                             contentDescription = "Remove from watchlist",
                             tint = if (removeFocused) Color(0xFFFF6B6B) else Color.Gray
                         )
@@ -298,10 +300,10 @@ fun OvalProgressPlayButton(
             .background(Color.DarkGray, shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
             .clickable(interactionSource = source, indication = null) { onPlay() }
             .drawBehind {
-                val progressWidth = (size.width * watchedPercentage / 100f).coerceIn(0f, size.width)
+                val progressWidth = (this.size.width * watchedPercentage / 100f).coerceIn(0f, this.size.width)
                 drawRect(
                     color = Color(0xFF4CAF50).copy(alpha = if (isFocused) 0.8f else 0.5f),
-                    size = androidx.compose.ui.geometry.Size(progressWidth, size.height)
+                    size = androidx.compose.ui.geometry.Size(progressWidth, this.size.height)
                 )
             },
         contentAlignment = Alignment.Center
