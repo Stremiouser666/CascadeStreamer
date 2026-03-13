@@ -9,8 +9,12 @@ import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +34,7 @@ import coil.compose.AsyncImage
 import com.cascadestreamer.app.managers.TVMazeEpisode
 import com.cascadestreamer.app.managers.TVMazeManager
 import com.cascadestreamer.app.managers.TVMazeShow
+import com.cascadestreamer.app.ui.templates.EpisodeDetailsTemplate
 import kotlinx.coroutines.launch
 
 data class SeriesData(
@@ -46,6 +51,7 @@ fun SeriesDetailScreen(
     onBack: () -> Unit
 ) {
     val selectedSeason = remember { mutableStateOf(1) }
+    val selectedEpisode = remember { mutableStateOf<TVMazeEpisode?>(null) }
     val episodes = remember { mutableStateOf<List<TVMazeEpisode>>(emptyList()) }
     val allSeasons = remember { mutableStateOf<List<Int>>(emptyList()) }
     val isLoading = remember { mutableStateOf(false) }
@@ -78,6 +84,63 @@ fun SeriesDetailScreen(
         }
     }
 
+    // If episode selected, show EpisodeDetailsTemplate
+    if (selectedEpisode.value != null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            // Back button header
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { selectedEpisode.value = null }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Back to series",
+                        tint = Color.White
+                    )
+                }
+                
+                Text(
+                    "Back to Series",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+            
+            // Episode details
+            EpisodeDetailsTemplate(
+                episode = selectedEpisode.value!!,
+                allEpisodesInSeason = episodes.value,
+                onPlay = onPlay,
+                onWatchedToggle = { /* TODO: Implement watched tracking */ },
+                onFavoritesToggle = { /* TODO: Implement favorites */ },
+                onRestart = { /* TODO: Implement restart */ },
+                onRemoveFromWatchlist = { /* TODO: Implement remove */ },
+                onNextEpisode = {
+                    val currentEp = selectedEpisode.value
+                    val nextEp = episodes.value.firstOrNull { it.number != null && currentEp != null && it.number!! > currentEp.number!! }
+                    if (nextEp != null) {
+                        selectedEpisode.value = nextEp
+                    }
+                },
+                isWatched = false,
+                isFavorite = false,
+                watchedPercentage = 0
+            )
+        }
+        return
+    }
+
+    // Default: Show series details + episode list
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -255,10 +318,9 @@ fun SeriesDetailScreen(
                 )
             } else {
                 episodes.value.forEach { episode ->
-                    EpisodeCard(
+                    EpisodeCardClickable(
                         episode = episode,
-                        episodeNumber = episode.number ?: 0,
-                        onClick = { /* Play episode */ }
+                        onClick = { selectedEpisode.value = episode }
                     )
                 }
             }
@@ -298,9 +360,8 @@ fun SeriesDetailScreen(
 }
 
 @Composable
-fun EpisodeCard(
+fun EpisodeCardClickable(
     episode: TVMazeEpisode,
-    episodeNumber: Int,
     onClick: () -> Unit
 ) {
     Column(
@@ -311,7 +372,7 @@ fun EpisodeCard(
             .padding(12.dp)
     ) {
         Text(
-            "E${episodeNumber}: ${episode.name}",
+            "E${episode.number}: ${episode.name}",
             fontSize = 16.sp,
             color = Color.White,
             fontWeight = FontWeight.Bold
