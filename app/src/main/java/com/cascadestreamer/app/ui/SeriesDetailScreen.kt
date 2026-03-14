@@ -1,4 +1,5 @@
 package com.cascadestreamer.app.ui
+import androidx.activity.compose.BackHandler
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -56,6 +57,7 @@ fun SeriesDetailScreen(
     val tvMazeManager = remember { TVMazeManager() }
     val scope = rememberCoroutineScope()
     val showDescriptionPopup = remember { mutableStateOf(false) }
+    BackHandler(enabled = selectedEpisode.value != null) { selectedEpisode.value = null }
 
     // Load all seasons on composition
     LaunchedEffect(series.show.id) {
