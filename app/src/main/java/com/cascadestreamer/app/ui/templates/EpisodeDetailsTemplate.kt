@@ -119,12 +119,17 @@ fun EpisodeDetailsTemplate(
                     IconButton(
                         onClick = { onWatchedToggle(!isWatched) },
                         interactionSource = watchedSource,
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier
+                            .size(48.dp)
+                            .background(
+                                if (watchedFocused) Color(0xFF4CAF50) else Color.DarkGray,
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                            )
                     ) {
                         Icon(
                             imageVector = if (isWatched) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
                             contentDescription = if (isWatched) "Mark unwatched" else "Mark watched",
-                            tint = if (watchedFocused) Color(0xFF4CAF50) else if (isWatched) Color(0xFF4CAF50) else Color.Gray,
+                            tint = Color.White,
                             modifier = Modifier.size(28.dp)
                         )
                     }
@@ -141,12 +146,17 @@ fun EpisodeDetailsTemplate(
                     IconButton(
                         onClick = { onFavoritesToggle(!isFavorite) },
                         interactionSource = favSource,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(
+                                if (favFocused) Color.Red else Color.DarkGray,
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                            )
                     ) {
                         Icon(
                             imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                             contentDescription = if (isFavorite) "Remove favorite" else "Add favorite",
-                            tint = if (favFocused) Color.Red else if (isFavorite) Color.Red else Color.Gray
+                            tint = Color.White
                         )
                     }
                     
@@ -156,12 +166,17 @@ fun EpisodeDetailsTemplate(
                     IconButton(
                         onClick = onNextEpisode,
                         interactionSource = nextSource,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(
+                                if (nextFocused) Color(0xFF2196F3) else Color.DarkGray,
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                            )
                     ) {
                         Icon(
                             imageVector = Icons.Filled.SkipNext,
                             contentDescription = "Next episode",
-                            tint = if (nextFocused) Color(0xFF2196F3) else Color.Gray
+                            tint = Color.White
                         )
                     }
                 }
@@ -177,12 +192,17 @@ fun EpisodeDetailsTemplate(
                     IconButton(
                         onClick = onRestart,
                         interactionSource = restartSource,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(
+                                if (restartFocused) Color(0xFF2196F3) else Color.DarkGray,
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                            )
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Refresh,
                             contentDescription = "Restart episode",
-                            tint = if (restartFocused) Color(0xFF2196F3) else Color.Gray
+                            tint = Color.White
                         )
                     }
                     
@@ -192,12 +212,17 @@ fun EpisodeDetailsTemplate(
                     IconButton(
                         onClick = onRemoveFromWatchlist,
                         interactionSource = removeSource,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .background(
+                                if (removeFocused) Color(0xFFFF6B6B) else Color.DarkGray,
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                            )
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Delete,
                             contentDescription = "Remove from watchlist",
-                            tint = if (removeFocused) Color(0xFFFF6B6B) else Color.Gray
+                            tint = Color.White
                         )
                     }
                 }
@@ -297,12 +322,15 @@ fun OvalProgressPlayButton(
     Box(
         modifier = modifier
             .height(48.dp)
-            .background(Color.DarkGray, shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp))
+            .background(
+                if (isFocused) Color(0xFF4CAF50) else Color.DarkGray,
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
+            )
             .clickable(interactionSource = source, indication = null) { onPlay() }
             .drawBehind {
                 val progressWidth = (this.size.width * watchedPercentage / 100f).coerceIn(0f, this.size.width)
                 drawRect(
-                    color = Color(0xFF4CAF50).copy(alpha = if (isFocused) 0.8f else 0.5f),
+                    color = Color(0xFF2E7D32).copy(alpha = 0.7f),
                     size = androidx.compose.ui.geometry.Size(progressWidth, this.size.height)
                 )
             },
