@@ -176,7 +176,7 @@ fun CascadeStreamerApp(
         Screen.SEARCH_SERIES -> {
             SearchSeriesScreen(
                 onSeriesSelected = { show ->
-                    selectedSeries.value = SeriesData(show = show, backdropUrl = show.backdrop)
+                    selectedSeries.value = SeriesData(show = show, backdropUrl = show.image?.original)
                     currentScreen.value = Screen.SERIES
                 },
                 onBack = {

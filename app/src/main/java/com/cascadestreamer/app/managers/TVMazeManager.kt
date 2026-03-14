@@ -11,9 +11,9 @@ class TVMazeManager {
         .baseUrl(baseUrl)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
-    
+
     private val service = retrofit.create(TVMazeService::class.java)
-    
+
     suspend fun searchShows(query: String): List<TVMazeShow> {
         return withContext(Dispatchers.IO) {
             try {
@@ -25,7 +25,7 @@ class TVMazeManager {
             }
         }
     }
-    
+
     suspend fun getShowDetails(showId: Int): TVMazeShow? {
         return withContext(Dispatchers.IO) {
             try {
@@ -36,7 +36,7 @@ class TVMazeManager {
             }
         }
     }
-    
+
     suspend fun getShowEpisodes(showId: Int): List<TVMazeEpisode> {
         return withContext(Dispatchers.IO) {
             try {
@@ -56,7 +56,7 @@ data class TVMazeShow(
     val rating: TVMazeRating? = null,
     val summary: String? = null,
     val genres: List<String> = emptyList(),
-    val image: TVMazeImage? = null
+    val image: TVMazeImage? = null,
 )
 
 data class TVMazeRating(
