@@ -1,7 +1,6 @@
 package com.cascadestreamer.app.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -29,7 +28,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.cascadestreamer.app.managers.TVMazeEpisode
 import com.cascadestreamer.app.managers.TVMazeManager
@@ -215,7 +213,7 @@ fun SeriesDetailScreen(
                 interactionSource = heartSource,
                 modifier = Modifier.size(48.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (heartFocused) Color.LightGray else Color.DarkGray
+                    containerColor = if (heartFocused) Color.Red else Color.DarkGray
                 )
             ) {
                 Text("♡", color = Color.White, fontSize = 20.sp)
@@ -304,21 +302,24 @@ fun SeriesDetailScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Episodes list
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            if (episodes.value.isEmpty()) {
-                Text(
-                    "No episodes found",
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(16.dp)
-                )
-            } else {
+        // Episodes horizontal scroll (just pictures)
+        if (episodes.value.isEmpty()) {
+            Text(
+                "No episodes found",
+                fontSize = 12.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(16.dp)
+            )
+        } else {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 episodes.value.forEach { episode ->
-                    EpisodeCardClickable(
+                    EpisodeImageCard(
                         episode = episode,
                         onClick = { selectedEpisode.value = episode }
                     )
@@ -360,39 +361,37 @@ fun SeriesDetailScreen(
 }
 
 @Composable
-fun EpisodeCardClickable(
+fun EpisodeImageCard(
     episode: TVMazeEpisode,
     onClick: () -> Unit
 ) {
-    Column(
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
+            .width(150.dp)
+            .height(200.dp)
             .background(Color.DarkGray)
             .clickable { onClick() }
-            .padding(12.dp)
     ) {
-        Text(
-            "E${episode.number}: ${episode.name}",
-            fontSize = 16.sp,
-            color = Color.White,
-            fontWeight = FontWeight.Bold
-        )
-
-        Text(
-            "Season ${episode.season} Episode ${episode.number} • ${episode.runtime ?: 0} min",
-            fontSize = 12.sp,
-            color = Color.Gray,
-            modifier = Modifier.padding(top = 4.dp)
-        )
-
-        episode.summary?.let {
-            Text(
-                it.replace("<[^>]*>".toRegex(), ""),
-                fontSize = 12.sp,
-                color = Color.LightGray,
-                maxLines = 2,
-                modifier = Modifier.padding(top = 8.dp)
+        episode.image?.medium?.let {
+            AsyncImage(
+                model = it,
+                contentDescription = "E${episode.number}: ${episode.name}",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
         }
+        
+        // Episode number overlay
+        Text(
+            "E${episode.number}",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(8.dp)
+                .background(Color.Black.copy(alpha = 0.7f), shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                .padding(4.dp)
+        )
     }
 }
