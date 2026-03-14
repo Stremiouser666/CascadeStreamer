@@ -42,7 +42,7 @@ fun DescriptionPopup(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
                 .fillMaxHeight(0.85f)
-                .background(Color(0xFF121212))
+                .background(Color(0xFF0A0A0A))
                 .padding(24.dp)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
