@@ -8,9 +8,11 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import com.cascadestreamer.app.data.Video
+import com.cascadestreamer.app.managers.TVMazeManager
 import com.cascadestreamer.app.managers.TVMazeShow
 import com.cascadestreamer.app.states.AppState
 import com.cascadestreamer.app.ui.HomeScreen
@@ -22,6 +24,7 @@ import com.cascadestreamer.app.ui.SeriesDetailScreen
 import com.cascadestreamer.app.ui.SeriesData
 import com.cascadestreamer.app.ui.FileBrowserScreen
 import com.cascadestreamer.app.ui.SearchSeriesScreen
+import kotlinx.coroutines.launch
 
 enum class Screen {
     HOME, SETTINGS, INFO, PLAYER, QUALITY, SERIES, FILE_BROWSER, SEARCH_SERIES
@@ -38,7 +41,8 @@ fun CascadeStreamerApp(
     val selectedQuality = remember { mutableStateOf(appState.loadSelectedQuality()) }
     val selectedSeries = remember { mutableStateOf<SeriesData?>(null) }
     val backPressCount = remember { mutableStateOf(0) }
-    
+    val scope = rememberCoroutineScope()
+
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -46,19 +50,19 @@ fun CascadeStreamerApp(
             currentScreen.value = Screen.FILE_BROWSER
         }
     }
-    
+
     BackHandler(enabled = currentScreen.value == Screen.HOME) {
         backPressCount.value++
         if (backPressCount.value >= 2) {
             onExitApp()
         }
     }
-    
+
     BackHandler(enabled = currentScreen.value != Screen.HOME) {
         currentScreen.value = Screen.HOME
         backPressCount.value = 0
     }
-    
+
     when (currentScreen.value) {
         Screen.HOME -> HomeScreen(
             appState = appState,
@@ -97,7 +101,7 @@ fun CascadeStreamerApp(
                 backPressCount.value = 0
             }
         )
-        
+
         Screen.SETTINGS -> SettingsScreen(
             appState = appState,
             onBack = {
@@ -106,14 +110,14 @@ fun CascadeStreamerApp(
             },
             onQuality = { currentScreen.value = Screen.QUALITY }
         )
-        
+
         Screen.INFO -> InfoScreen(
             onBack = {
                 currentScreen.value = Screen.HOME
                 backPressCount.value = 0
             }
         )
-        
+
         Screen.QUALITY -> {
             selectedVideo.value?.let { video ->
                 QualitySelectionScreen(
@@ -131,7 +135,7 @@ fun CascadeStreamerApp(
                 )
             }
         }
-        
+
         Screen.SERIES -> {
             selectedSeries.value?.let { series ->
                 SeriesDetailScreen(
@@ -146,7 +150,7 @@ fun CascadeStreamerApp(
                 )
             }
         }
-        
+
         Screen.FILE_BROWSER -> {
             FileBrowserScreen(
                 onFileSelected = { filePath ->
@@ -172,12 +176,16 @@ fun CascadeStreamerApp(
                 }
             )
         }
-        
+
         Screen.SEARCH_SERIES -> {
             SearchSeriesScreen(
                 onSeriesSelected = { show ->
-                    selectedSeries.value = SeriesData(show = show, backdropUrl = show.image?.original)
-                    currentScreen.value = Screen.SERIES
+                    scope.launch {
+                        val tvMazeManager = TVMazeManager()
+                        val backgroundUrl = tvMazeManager.getShowBackgroundImage(show.id)
+                        selectedSeries.value = SeriesData(show = show, backdropUrl = backgroundUrl)
+                        currentScreen.value = Screen.SERIES
+                    }
                 },
                 onBack = {
                     currentScreen.value = Screen.HOME
@@ -185,7 +193,7 @@ fun CascadeStreamerApp(
                 }
             )
         }
-        
+
         Screen.PLAYER -> {
             selectedVideo.value?.let { video ->
                 VideoPlayerScreen(
