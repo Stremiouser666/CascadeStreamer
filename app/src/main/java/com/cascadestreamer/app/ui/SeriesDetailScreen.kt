@@ -302,7 +302,7 @@ fun SeriesDetailScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Episodes horizontal scroll (just pictures)
+        // Episodes horizontal scroll (just pictures with fallback)
         if (episodes.value.isEmpty()) {
             Text(
                 "No episodes found",
@@ -321,6 +321,7 @@ fun SeriesDetailScreen(
                 episodes.value.forEach { episode ->
                     EpisodeImageCard(
                         episode = episode,
+                        showPosterFallback = series.posterUrl,
                         onClick = { selectedEpisode.value = episode }
                     )
                 }
@@ -363,6 +364,7 @@ fun SeriesDetailScreen(
 @Composable
 fun EpisodeImageCard(
     episode: TVMazeEpisode,
+    showPosterFallback: String? = null,
     onClick: () -> Unit
 ) {
     Box(
@@ -370,28 +372,66 @@ fun EpisodeImageCard(
             .width(150.dp)
             .height(200.dp)
             .background(Color.DarkGray)
-            .clickable { onClick() }
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
     ) {
-        episode.image?.medium?.let {
+        // Priority 1: Episode image
+        if (episode.image?.medium != null) {
             AsyncImage(
-                model = it,
+                model = episode.image.medium,
                 contentDescription = "E${episode.number}: ${episode.name}",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
+        } 
+        // Priority 2: Show poster fallback
+        else if (showPosterFallback != null) {
+            AsyncImage(
+                model = showPosterFallback,
+                contentDescription = "Show poster",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        }
+        // Priority 3: Text fallback
+        else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.DarkGray)
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "E${episode.number}",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                
+                Text(
+                    episode.name ?: "Unknown",
+                    fontSize = 12.sp,
+                    color = Color.LightGray,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
         }
         
-        // Episode number overlay
-        Text(
-            "E${episode.number}",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(8.dp)
-                .background(Color.Black.copy(alpha = 0.7f), shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
-                .padding(4.dp)
-        )
+        // Episode number overlay (only show if we have image)
+        if (episode.image?.medium != null) {
+            Text(
+                "E${episode.number}",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(8.dp)
+                    .background(Color.Black.copy(alpha = 0.7f), shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                    .padding(4.dp)
+            )
+        }
     }
 }
