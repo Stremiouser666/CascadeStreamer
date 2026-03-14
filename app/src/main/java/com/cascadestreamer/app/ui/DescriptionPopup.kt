@@ -43,7 +43,6 @@ fun DescriptionPopup(
                 .fillMaxWidth(0.9f)
                 .fillMaxHeight(0.85f)
                 .background(Color(0xFF121212))
-                .border(2.dp, Color.DarkGray)
                 .padding(24.dp)
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
@@ -124,44 +123,49 @@ fun DescriptionPopup(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                // Controls row: [−] [Close] [+]
+                // Floating zoom controls
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        .padding(horizontal = 32.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Smaller button
                     ZoomButton(
                         icon = Icons.Filled.Remove,
                         onClick = { if (fontSize > 10f) fontSize -= 2f }
                     )
 
-                    // Close button (centered, half width)
-                    val closeSource = remember { MutableInteractionSource() }
-                    val closeFocused by closeSource.collectIsFocusedAsState()
-                    
-                    Button(
-                        onClick = onDismiss,
-                        interactionSource = closeSource,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (closeFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f)
-                        )
-                    ) {
-                        Text("Close", color = Color.White, fontWeight = FontWeight.Bold)
-                    }
+                    Text(
+                        "${fontSize.toInt()} pt",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
 
-                    // Larger button
                     ZoomButton(
                         icon = Icons.Filled.Add,
-                        onClick = { if (fontSize < 24f) fontSize += 2f }
+                        onClick = { if (fontSize < 30f) fontSize += 2f }
                     )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Close button
+                val closeSource = remember { MutableInteractionSource() }
+                val closeFocused by closeSource.collectIsFocusedAsState()
+                
+                Button(
+                    onClick = onDismiss,
+                    interactionSource = closeSource,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (closeFocused) Color(0xFF2196F3) else Color(0xFF2196F3).copy(alpha = 0.6f)
+                    )
+                ) {
+                    Text("Close", color = Color.White)
                 }
             }
         }
