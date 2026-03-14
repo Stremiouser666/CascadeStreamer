@@ -123,6 +123,7 @@ fun SeriesDetailScreen(
                 onFavoritesToggle = { /* TODO: Implement favorites */ },
                 onRestart = { /* TODO: Implement restart */ },
                 onRemoveFromWatchlist = { /* TODO: Implement remove */ },
+                onEpisodeSelected = { selectedEpisode.value = it },
                 onNextEpisode = {
                     val currentEp = selectedEpisode.value
                     val nextEp = episodes.value.firstOrNull { it.number != null && currentEp != null && it.number!! > currentEp.number!! }

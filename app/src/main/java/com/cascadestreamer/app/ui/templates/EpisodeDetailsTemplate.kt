@@ -2,6 +2,7 @@ package com.cascadestreamer.app.ui.templates
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
@@ -47,6 +48,7 @@ fun EpisodeDetailsTemplate(
     onRestart: () -> Unit = {},
     onRemoveFromWatchlist: () -> Unit = {},
     onNextEpisode: () -> Unit = {},
+    onEpisodeSelected: (TVMazeEpisode) -> Unit = {},
     isWatched: Boolean = false,
     isFavorite: Boolean = false,
     watchedPercentage: Int = 0
@@ -267,10 +269,10 @@ fun EpisodeDetailsTemplate(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // Episode list
+        // Episode list - horizontal scroll of pictures
         if (allEpisodesInSeason.isNotEmpty()) {
             Text(
-                "Episodes",
+                "Season ${episode.season}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White,
@@ -279,14 +281,18 @@ fun EpisodeDetailsTemplate(
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            Column(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 allEpisodesInSeason.forEach { ep ->
-                    EpisodeListItem(episode = ep)
+                    EpisodeImageCard(
+                        episode = ep,
+                        onClick = { onEpisodeSelected(ep) }
+                    )
                 }
             }
         }
@@ -357,25 +363,61 @@ fun OvalProgressPlayButton(
 }
 
 @Composable
-fun EpisodeListItem(episode: TVMazeEpisode) {
-    Column(
+fun EpisodeImageCard(
+    episode: TVMazeEpisode,
+    onClick: () -> Unit
+) {
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
+            .width(120.dp)
+            .height(160.dp)
             .background(Color.DarkGray)
-            .padding(8.dp)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            "E${episode.number}: ${episode.name}",
-            fontSize = 14.sp,
-            color = Color.White,
-            fontWeight = FontWeight.Bold
-        )
-        
-        Text(
-            "${episode.runtime ?: 0} min",
-            fontSize = 11.sp,
-            color = Color.Gray,
-            modifier = Modifier.padding(top = 2.dp)
-        )
+        // Try episode image first
+        if (episode.image?.medium != null) {
+            AsyncImage(
+                model = episode.image.medium,
+                contentDescription = "E${episode.number}",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            
+            Text(
+                "E${episode.number}",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(4.dp)
+                    .background(Color.Black.copy(alpha = 0.7f), shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp))
+                    .padding(2.dp)
+            )
+        } else {
+            // Fallback to text
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    "E${episode.number}",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                
+                Text(
+                    episode.name ?: "Unknown",
+                    fontSize = 10.sp,
+                    color = Color.LightGray,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
     }
 }
