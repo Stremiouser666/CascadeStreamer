@@ -47,6 +47,18 @@ class TVMazeManager {
             }
         }
     }
+
+    suspend fun getShowBackgroundImage(showId: Int): String? {
+        return withContext(Dispatchers.IO) {
+            try {
+                val images = service.getShowImages(showId)
+                images.firstOrNull { it.type == "background" }?.resolutions?.original?.url
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
+    }
 }
 
 data class TVMazeShow(
@@ -56,7 +68,7 @@ data class TVMazeShow(
     val rating: TVMazeRating? = null,
     val summary: String? = null,
     val genres: List<String> = emptyList(),
-    val image: TVMazeImage? = null,
+    val image: TVMazeImage? = null
 )
 
 data class TVMazeRating(
@@ -76,4 +88,18 @@ data class TVMazeEpisode(
     val summary: String? = null,
     val runtime: Int? = null,
     val image: TVMazeImage? = null
+)
+
+data class TVMazeImageData(
+    val id: Int,
+    val type: String,
+    val resolutions: TVMazeImageResolutions
+)
+
+data class TVMazeImageResolutions(
+    val original: TVMazeImageUrl
+)
+
+data class TVMazeImageUrl(
+    val url: String
 )
