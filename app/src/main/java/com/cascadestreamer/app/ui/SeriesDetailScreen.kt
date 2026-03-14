@@ -123,7 +123,6 @@ fun SeriesDetailScreen(
                 onFavoritesToggle = { /* TODO: Implement favorites */ },
                 onRestart = { /* TODO: Implement restart */ },
                 onRemoveFromWatchlist = { /* TODO: Implement remove */ },
-                onEpisodeSelected = { selectedEpisode.value = it },
                 onNextEpisode = {
                     val currentEp = selectedEpisode.value
                     val nextEp = episodes.value.firstOrNull { it.number != null && currentEp != null && it.number!! > currentEp.number!! }
@@ -131,6 +130,7 @@ fun SeriesDetailScreen(
                         selectedEpisode.value = nextEp
                     }
                 },
+                onEpisodeSelected = { selectedEpisode.value = it },
                 isWatched = false,
                 isFavorite = false,
                 watchedPercentage = 0
@@ -153,9 +153,11 @@ fun SeriesDetailScreen(
                 .height(300.dp)
                 .background(Color.DarkGray)
         ) {
-            series.backdropUrl?.let {
+            // Use backdropUrl, fallback to show image original, then poster
+            val imageUrl = series.backdropUrl ?: series.show.image?.original ?: series.show.image?.medium
+            if (imageUrl != null) {
                 AsyncImage(
-                    model = it,
+                    model = imageUrl,
                     contentDescription = series.show.name,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
@@ -181,14 +183,14 @@ fun SeriesDetailScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Play button + action buttons with opacity feedback
+        // Play button + Heart button with strong background colors on focus
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Play button
+            // Play button - Green on focus
             val playSource = remember { MutableInteractionSource() }
             val playFocused by playSource.collectIsFocusedAsState()
             
@@ -199,13 +201,13 @@ fun SeriesDetailScreen(
                     .weight(1f)
                     .height(48.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (playFocused) Color(0xFF4CAF50) else Color(0xFF4CAF50).copy(alpha = 0.6f)
+                    containerColor = if (playFocused) Color(0xFF4CAF50) else Color.DarkGray
                 )
             ) {
-                Text("▶ Play", color = Color.White, fontSize = 16.sp)
+                Text("▶ Play", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
 
-            // Heart button
+            // Heart button - Red on focus
             val heartSource = remember { MutableInteractionSource() }
             val heartFocused by heartSource.collectIsFocusedAsState()
             
@@ -254,7 +256,7 @@ fun SeriesDetailScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Season selector
+        // Season selector - Blue on focus
         Column(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
@@ -289,12 +291,12 @@ fun SeriesDetailScreen(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = when {
                                     selectedSeason.value == season -> Color(0xFF4CAF50)
-                                    seasonFocused -> Color.Gray
+                                    seasonFocused -> Color(0xFF2196F3)
                                     else -> Color.DarkGray
                                 }
                             )
                         ) {
-                            Text("Season $season", fontSize = 12.sp)
+                            Text("Season $season", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -322,7 +324,7 @@ fun SeriesDetailScreen(
                 episodes.value.forEach { episode ->
                     EpisodeImageCard(
                         episode = episode,
-                        showPosterFallback = series.posterUrl,
+                        showPosterFallback = series.posterUrl ?: series.show.image?.medium,
                         onClick = { selectedEpisode.value = episode }
                     )
                 }
