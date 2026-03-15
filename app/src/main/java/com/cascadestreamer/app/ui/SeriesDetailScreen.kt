@@ -1,5 +1,4 @@
 package com.cascadestreamer.app.ui
-import androidx.activity.compose.BackHandler
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -57,9 +56,7 @@ fun SeriesDetailScreen(
     val tvMazeManager = remember { TVMazeManager() }
     val scope = rememberCoroutineScope()
     val showDescriptionPopup = remember { mutableStateOf(false) }
-    BackHandler(enabled = selectedEpisode.value != null) { selectedEpisode.value = null }
 
-    // Load all seasons on composition
     LaunchedEffect(series.show.id) {
         isLoading.value = true
         scope.launch {
@@ -67,7 +64,6 @@ fun SeriesDetailScreen(
             val seasons = allEpisodes.mapNotNull { it.season }.distinct().sorted()
             allSeasons.value = seasons
 
-            // Load Season 1 by default
             if (seasons.isNotEmpty()) {
                 selectedSeason.value = seasons.first()
                 episodes.value = allEpisodes.filter { it.season == selectedSeason.value }
@@ -76,7 +72,6 @@ fun SeriesDetailScreen(
         }
     }
 
-    // Load episodes when season changes
     LaunchedEffect(selectedSeason.value) {
         scope.launch {
             val allEpisodes = tvMazeManager.getShowEpisodes(series.show.id)
@@ -84,14 +79,12 @@ fun SeriesDetailScreen(
         }
     }
 
-    // If episode selected, show EpisodeDetailsTemplate
     if (selectedEpisode.value != null) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black)
         ) {
-            // Back button header
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -107,7 +100,7 @@ fun SeriesDetailScreen(
                         tint = Color.White
                     )
                 }
-                
+
                 Text(
                     "Back to Series",
                     color = Color.White,
@@ -115,16 +108,15 @@ fun SeriesDetailScreen(
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }
-            
-            // Episode details
+
             EpisodeDetailsTemplate(
                 episode = selectedEpisode.value!!,
                 allEpisodesInSeason = episodes.value,
                 onPlay = onPlay,
-                onWatchedToggle = { /* TODO: Implement watched tracking */ },
-                onFavoritesToggle = { /* TODO: Implement favorites */ },
-                onRestart = { /* TODO: Implement restart */ },
-                onRemoveFromWatchlist = { /* TODO: Implement remove */ },
+                onWatchedToggle = { },
+                onFavoritesToggle = { },
+                onRestart = { },
+                onRemoveFromWatchlist = { },
                 onNextEpisode = {
                     val currentEp = selectedEpisode.value
                     val nextEp = episodes.value.firstOrNull { it.number != null && currentEp != null && it.number!! > currentEp.number!! }
@@ -141,27 +133,26 @@ fun SeriesDetailScreen(
         return
     }
 
-    // Default: Show series details + episode list
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
             .verticalScroll(rememberScrollState())
     ) {
-        // Hero Backdrop
+        // --- FIXED HERO BACKDROP ---
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(300.dp)
                 .background(Color.DarkGray)
         ) {
-            // Use backdropUrl, fallback to show image original, then poster
             val imageUrl = series.backdropUrl ?: series.show.image?.original ?: series.show.image?.medium
             if (imageUrl != null) {
                 AsyncImage(
                     model = imageUrl,
                     contentDescription = series.show.name,
                     modifier = Modifier.fillMaxSize(),
+                    // CHANGED: Use Crop to ensure full width/height coverage
                     contentScale = ContentScale.Crop
                 )
             }
@@ -169,8 +160,8 @@ fun SeriesDetailScreen(
             // Title overlay
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.5f)),
+                    .fillMaxSize(),
+                // REMOVED: Background tint (Color.Black.copy(alpha = 0.5f))
                 contentAlignment = Alignment.BottomStart
             ) {
                 Text(
@@ -182,20 +173,19 @@ fun SeriesDetailScreen(
                 )
             }
         }
+        // --- END FIXED SECTION ---
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Play button + Heart button with strong background colors on focus
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Play button - Green on focus
             val playSource = remember { MutableInteractionSource() }
             val playFocused by playSource.collectIsFocusedAsState()
-            
+
             Button(
                 onClick = onPlay,
                 interactionSource = playSource,
@@ -209,10 +199,9 @@ fun SeriesDetailScreen(
                 Text("▶ Play", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
 
-            // Heart button - Red on focus
             val heartSource = remember { MutableInteractionSource() }
             val heartFocused by heartSource.collectIsFocusedAsState()
-            
+
             Button(
                 onClick = {},
                 interactionSource = heartSource,
@@ -227,7 +216,6 @@ fun SeriesDetailScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Metadata
         Column(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
@@ -258,7 +246,6 @@ fun SeriesDetailScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Season selector - Blue on focus
         Column(
             modifier = Modifier.padding(horizontal = 16.dp)
         ) {
@@ -270,11 +257,7 @@ fun SeriesDetailScreen(
             )
 
             if (isLoading.value) {
-                Text(
-                    "Loading seasons...",
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
+                Text("Loading seasons...", fontSize = 12.sp, color = Color.Gray)
             } else {
                 Row(
                     modifier = Modifier
@@ -285,7 +268,7 @@ fun SeriesDetailScreen(
                     allSeasons.value.forEach { season ->
                         val seasonSource = remember { MutableInteractionSource() }
                         val seasonFocused by seasonSource.collectIsFocusedAsState()
-                        
+
                         Button(
                             onClick = { selectedSeason.value = season },
                             interactionSource = seasonSource,
@@ -307,7 +290,6 @@ fun SeriesDetailScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Episodes horizontal scroll (just pictures with fallback)
         if (episodes.value.isEmpty()) {
             Text(
                 "No episodes found",
@@ -335,7 +317,6 @@ fun SeriesDetailScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Cast & Crew (placeholder)
         Text(
             "Cast & Crew",
             fontSize = 18.sp,
@@ -356,7 +337,6 @@ fun SeriesDetailScreen(
         Spacer(modifier = Modifier.height(32.dp))
     }
 
-    // Description Popup
     if (showDescriptionPopup.value) {
         DescriptionPopup(
             description = series.show.summary ?: "",
@@ -380,7 +360,6 @@ fun EpisodeImageCard(
             .clickable { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        // Priority 1: Episode image
         if (episode.image?.medium != null) {
             AsyncImage(
                 model = episode.image.medium,
@@ -388,18 +367,14 @@ fun EpisodeImageCard(
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
-        } 
-        // Priority 2: Show poster fallback
-        else if (showPosterFallback != null) {
+        } else if (showPosterFallback != null) {
             AsyncImage(
                 model = showPosterFallback,
                 contentDescription = "Show poster",
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
-        }
-        // Priority 3: Text fallback
-        else {
+        } else {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -414,7 +389,6 @@ fun EpisodeImageCard(
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
-                
                 Text(
                     episode.name ?: "Unknown",
                     fontSize = 12.sp,
@@ -423,8 +397,7 @@ fun EpisodeImageCard(
                 )
             }
         }
-        
-        // Episode number overlay (only show if we have image)
+
         if (episode.image?.medium != null) {
             Text(
                 "E${episode.number}",
@@ -434,7 +407,10 @@ fun EpisodeImageCard(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(8.dp)
-                    .background(Color.Black.copy(alpha = 0.7f), shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                    .background(
+                        Color.Black.copy(alpha = 0.7f),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp)
+                    )
                     .padding(4.dp)
             )
         }
