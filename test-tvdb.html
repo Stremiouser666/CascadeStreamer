@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TVDB API Test</title>
+    <style>
+        body { font-family: Arial; background: #1a1a1a; color: white; padding: 20px; }
+        input { padding: 10px; width: 300px; font-size: 16px; }
+        button { padding: 10px 20px; background: #2196F3; color: white; border: none; cursor: pointer; }
+        .result { margin-top: 20px; padding: 20px; background: #333; border-radius: 5px; }
+        img { max-width: 100%; max-height: 300px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>TVDB API Test</h1>
+    
+    <input type="text" id="searchInput" placeholder="Enter show name" value="Breaking Bad">
+    <button onclick="searchShows()">Search</button>
+    
+    <div id="results" class="result" style="display:none;">
+        <h2>Results:</h2>
+        <div id="searchResults"></div>
+    </div>
+    
+    <div id="backgroundResult" class="result" style="display:none;">
+        <h2>Background Image:</h2>
+        <img id="bgImage" src="" alt="Background">
+    </div>
+
+    <script>
+        const API_KEY = '598cad7b-56c2-47ab-b7d7-a95a4a807872';
+        const BASE_URL = 'https://api4.thetvdb.com/v4';
+
+        async function searchShows() {
+            const query = document.getElementById('searchInput').value;
+            try {
+                const response = await fetch(`${BASE_URL}/search?query=${query}`, {
+                    headers: { 'Authorization': `Bearer ${API_KEY}` }
+                });
+                const data = await response.json();
+                console.log('Search Response:', data);
+                
+                if (data.data && data.data.length > 0) {
+                    let html = '';
+                    data.data.forEach(show => {
+                        html += `<div style="margin: 10px 0; padding: 10px; background: #444;">
+                            <strong>${show.name}</strong> (ID: ${show.id})
+                            <button onclick="getBackground(${show.id})">Get Background</button>
+                        </div>`;
+                    });
+                    document.getElementById('searchResults').innerHTML = html;
+                    document.getElementById('results').style.display = 'block';
+                } else {
+                    alert('No results found');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function getBackground(showId) {
+            try {
+                const response = await fetch(`${BASE_URL}/series/${showId}/images`, {
+                    headers: { 'Authorization': `Bearer ${API_KEY}` }
+                });
+                const data = await response.json();
+                console.log('Images Response:', data);
+                
+                if (data.data && data.data.backgrounds && data.data.backgrounds.length > 0) {
+                    const bgUrl = data.data.backgrounds[0].image;
+                    document.getElementById('bgImage').src = bgUrl;
+                    document.getElementById('backgroundResult').style.display = 'block';
+                } else {
+                    alert('No background image found');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
