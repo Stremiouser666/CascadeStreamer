@@ -1,21 +1,16 @@
 package com.cascadestreamer.app.managers
 
-import retrofit2.http.GET
-import retrofit2.http.Header
-import retrofit2.http.Path
-import retrofit2.http.Query
+import retrofit2.http.*
 
 interface TVDBService {
+    @POST("login")
+    suspend fun login(@Body request: LoginRequest): LoginResponse
 
-    @GET("search")
-    suspend fun searchShows(
-        @Header("Authorization") apiKey: String,
-        @Query("query") query: String
-    ): TVDBSearchResponse
-
-    @GET("series/{id}/images")
-    suspend fun getShowImages(
-        @Header("Authorization") apiKey: String,
-        @Path("id") showId: Int
-    ): TVDBImagesResponse
+    @GET("series/{seriesId}/artworks")
+    suspend fun getArtworks(
+        @Header("Authorization") bearer: String,
+        @Path("seriesId") seriesId: Int,
+        @Query("lang") lang: String? = "eng",
+        @Query("type") type: Int? = null
+    ): ArtworksResponse
 }

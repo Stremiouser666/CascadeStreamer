@@ -2,9 +2,9 @@ package com.cascadestreamer.app.managers
 
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
-import retrofit2.http.*
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
+import com.squareup.moshi.Moshi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -42,27 +42,15 @@ data class Artwork(
     val rating: Double? = null
 )
 
-interface TVDBService {
-    @POST("login")
-    suspend fun login(@Body request: LoginRequest): LoginResponse
-
-    @GET("series/{seriesId}/artworks")
-    suspend fun getArtworks(
-        @Header("Authorization") bearer: String,
-        @Path("seriesId") seriesId: Int,
-        @Query("lang") lang: String? = "eng",
-        @Query("type") type: Int? = null
-    ): ArtworksResponse
-}
-
 class TVDBManager {
     private val apiKey = "598cad7b-56c2-47ab-b7d7-a95a4a807872"
     private val baseUrl = "https://api4.thetvdb.com/v4/"
     private var token: String? = null
 
+    private val moshi = Moshi.Builder().build()
     private val retrofit = Retrofit.Builder()
         .baseUrl(baseUrl)
-        .addConverterFactory(MoshiConverterFactory.create())
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
 
     private val service = retrofit.create(TVDBService::class.java)
@@ -91,10 +79,10 @@ class TVDBManager {
                 val response = service.getArtworks(
                     bearer = "Bearer $bearer",
                     seriesId = seriesId,
-                    type = 3  // 3 = fanart/background
+                    type = 3
                 )
 
-                response.data.artworks?.firstOrNull()?.image
+                response.data?.artworks?.firstOrNull()?.image
             } catch (e: Exception) {
                 e.printStackTrace()
                 null
