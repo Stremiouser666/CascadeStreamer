@@ -59,6 +59,17 @@ class TVMazeManager {
             }
         }
     }
+
+    suspend fun getShowCast(showId: Int): List<TVMazeCastMember> {
+        return withContext(Dispatchers.IO) {
+            try {
+                service.getShowCast(showId)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
+        }
+    }
 }
 
 data class TVMazeShow(
@@ -102,4 +113,21 @@ data class TVMazeImageResolutions(
 
 data class TVMazeImageUrl(
     val url: String
+)
+
+data class TVMazeCastMember(
+    val person: TVMazePerson,
+    val character: TVMazeCharacter
+)
+
+data class TVMazePerson(
+    val id: Int,
+    val name: String,
+    val image: TVMazeImage? = null
+)
+
+data class TVMazeCharacter(
+    val id: Int,
+    val name: String,
+    val image: TVMazeImage? = null
 )

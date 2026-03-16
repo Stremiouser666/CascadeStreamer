@@ -17,6 +17,9 @@ interface TVMazeService {
 
     @GET("shows/{id}/images")
     suspend fun getShowImages(@Path("id") showId: Int): List<TVMazeImageData>
+
+    @GET("shows/{id}/cast")
+    suspend fun getShowCast(@Path("id") showId: Int): List<TVMazeCastMember>
 }
 
 data class TVMazeShowSearchResult(
