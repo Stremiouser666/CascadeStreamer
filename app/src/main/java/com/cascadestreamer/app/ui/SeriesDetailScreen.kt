@@ -1,5 +1,6 @@
 package com.cascadestreamer.app.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
@@ -30,7 +31,7 @@ import com.cascadestreamer.app.managers.TVMazeShow
 import com.cascadestreamer.app.ui.templates.EpisodeDetailsTemplate
 import kotlinx.coroutines.launch
 
-// --- DATA MODELS (Fixes "Unresolved Reference: SeriesData/CastMember") ---
+// --- DATA MODELS ---
 
 data class CastMember(
     val id: Int,
@@ -74,9 +75,15 @@ fun SeriesDetailScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
-    val heroInteractionSource = remember { MutableInteractionSource() }
-    val isHeroFocused by heroInteractionSource.collectIsFocusedAsState()
-    LaunchedEffect(isHeroFocused) { if (isHeroFocused) scrollState.animateScrollTo(0) }
+    // --- 1. REMOTE BACK BUTTON HANDLING ---
+    // If any sub-state is active, the remote back button clears it instead of exiting the app.
+    BackHandler(enabled = selectedCast.value != null || selectedEpisode.value != null || showFullDescription.value) {
+        when {
+            showFullDescription.value -> showFullDescription.value = false
+            selectedEpisode.value != null -> selectedEpisode.value = null
+            selectedCast.value != null -> selectedCast.value = null
+        }
+    }
 
     LaunchedEffect(series.show.id) {
         scope.launch {
@@ -90,6 +97,7 @@ fun SeriesDetailScreen(
         }
     }
 
+    // --- SUB-SCREEN RENDERING ---
     if (selectedCast.value != null) {
         ActorWikiProfile(member = selectedCast.value!!, onBack = { selectedCast.value = null })
         return
@@ -116,24 +124,58 @@ fun SeriesDetailScreen(
         return
     }
 
+    // --- MAIN SCREEN CONTENT ---
     Column(modifier = Modifier.fillMaxSize().background(Color.Black).verticalScroll(scrollState)) {
-        Box(modifier = Modifier.fillMaxWidth().height(450.dp).focusable(interactionSource = heroInteractionSource)) {
+        
+        // FIX: Removed .focusable() from this Box. It was a "Focus Trap" stealing input from children.
+        Box(modifier = Modifier.fillMaxWidth().height(450.dp)) {
             val imageUrl = series.backdropUrl ?: series.show.image?.original
             AsyncImage(model = imageUrl, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
 
-            Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().fillMaxHeight(0.38f).background(Color.Black.copy(alpha = 0.05f)).padding(horizontal = 32.dp, vertical = 16.dp)) {
+            Box(modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .fillMaxHeight(0.45f)
+                .background(Color.Black.copy(alpha = 0.2f))
+                .padding(horizontal = 32.dp, vertical = 16.dp)) {
+                
                 Row(verticalAlignment = Alignment.Top) {
                     Column(horizontalAlignment = Alignment.Start) {
+                        // Focusable Play & Favorite buttons
                         TVFocusButton(text = "▶ Play", onClick = onPlay, width = 160.dp, focusColor = Color(0xFF00A36C))
                         Spacer(modifier = Modifier.height(12.dp))
                         TVFocusButton(text = "♡", onClick = {}, isIcon = true, focusColor = Color.Red)
                     }
+                    
                     Spacer(modifier = Modifier.width(28.dp))
+                    
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = "★ ${series.show.rating?.average ?: "N/A"}  •  ${series.show.premiered?.take(4) ?: "N/A"}  •  ${series.show.genres.joinToString(", ")}", style = TVShadowStyle.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold))
+                        Text(
+                            text = "★ ${series.show.rating?.average ?: "N/A"}  •  ${series.show.premiered?.take(4) ?: "N/A"}  •  ${series.show.genres.joinToString(", ")}", 
+                            style = TVShadowStyle.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                        )
                         Spacer(modifier = Modifier.height(10.dp))
+                        
+                        // FIX: Wrapped Summary in a Surface to make it focusable on TV
                         val summaryText = series.show.summary?.replace("<[^>]*>".toRegex(), "") ?: ""
-                        Text(text = summaryText, style = TVShadowStyle.copy(fontSize = 15.sp, lineHeight = 22.sp, color = Color.White), maxLines = 3, modifier = Modifier.clickable { showFullDescription.value = true }.background(Color.Black.copy(alpha = 0.3f), RoundedCornerShape(8.dp)).padding(12.dp))
+                        val summaryInteraction = remember { MutableInteractionSource() }
+                        val isSummaryFocused by summaryInteraction.collectIsFocusedAsState()
+
+                        Surface(
+                            onClick = { showFullDescription.value = true },
+                            interactionSource = summaryInteraction,
+                            color = if (isSummaryFocused) Color.White.copy(alpha = 0.15f) else Color.Transparent,
+                            shape = RoundedCornerShape(8.dp),
+                            border = if (isSummaryFocused) BorderStroke(2.dp, Color.White) else null,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = summaryText, 
+                                style = TVShadowStyle.copy(fontSize = 15.sp, lineHeight = 22.sp), 
+                                maxLines = 3, 
+                                modifier = Modifier.padding(12.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -165,6 +207,7 @@ fun SeriesDetailScreen(
         Spacer(modifier = Modifier.height(80.dp))
     }
 
+    // --- FULL DESCRIPTION DIALOG ---
     if (showFullDescription.value) {
         var fontSize by remember { mutableStateOf(18.sp) }
         Dialog(onDismissRequest = { showFullDescription.value = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -190,7 +233,7 @@ fun SeriesDetailScreen(
     }
 }
 
-// --- HELPER COMPONENTS (Fixes "Unresolved Reference: SectionTitle/TVBackButton/etc") ---
+// --- HELPER COMPONENTS ---
 
 @Composable
 fun SectionTitle(text: String) {
@@ -199,10 +242,19 @@ fun SectionTitle(text: String) {
 
 @Composable
 fun TVBackButton(onBack: () -> Unit, label: String) {
-    Row(modifier = Modifier.padding(24.dp).clickable { onBack() }, verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Default.ArrowBack, null, tint = Color.White)
+    val source = remember { MutableInteractionSource() }
+    val isFocused by source.collectIsFocusedAsState()
+    Row(
+        modifier = Modifier
+            .padding(24.dp)
+            .clickable(source, null) { onBack() }
+            .background(if (isFocused) Color.White.copy(alpha = 0.1f) else Color.Transparent, RoundedCornerShape(8.dp))
+            .padding(8.dp), 
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Default.ArrowBack, null, tint = if (isFocused) Color.Cyan else Color.White)
         Spacer(modifier = Modifier.width(12.dp))
-        Text(label, style = TVShadowStyle.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold))
+        Text(label, style = TVShadowStyle.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (isFocused) Color.Cyan else Color.White))
     }
 }
 
@@ -233,9 +285,12 @@ fun TVSeasonSelectButton(season: Int, isSelected: Boolean, onClick: () -> Unit) 
     Button(
         onClick = onClick,
         interactionSource = source,
-        colors = ButtonDefaults.buttonColors(containerColor = when { isFocused -> Color.White; isSelected -> Color(0xFF388E3C); else -> Color.Transparent }, contentColor = if (isFocused) Color.Black else Color.White),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = when { isFocused -> Color.White; isSelected -> Color(0xFF388E3C); else -> Color.Transparent }, 
+            contentColor = if (isFocused) Color.Black else Color.White
+        ),
         shape = RoundedCornerShape(8.dp),
-        border = if (!isFocused && !isSelected) ButtonDefaults.outlinedButtonBorder else null
+        border = if (!isFocused && !isSelected) BorderStroke(2.dp, Color.Gray) else null
     ) {
         Text("Season $season", fontWeight = FontWeight.Bold)
     }
@@ -246,7 +301,12 @@ fun TVEpisodeCard(episode: TVMazeEpisode, fallback: String?, onClick: () -> Unit
     val source = remember { MutableInteractionSource() }
     val isFocused by source.collectIsFocusedAsState()
     Column(modifier = Modifier.width(280.dp).clickable(source, null) { onClick() }) {
-        Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f/9f).clip(RoundedCornerShape(12.dp)).background(Color(0xFF151515)).then(if (isFocused) Modifier.border(4.dp, Color.White, RoundedCornerShape(12.dp)).padding(4.dp) else Modifier)) {
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f/9f)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFF151515))
+            .then(if (isFocused) Modifier.border(4.dp, Color.White, RoundedCornerShape(12.dp)).padding(4.dp) else Modifier)) {
             AsyncImage(model = episode.image?.medium ?: fallback, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -259,7 +319,11 @@ fun TVCastCircleCard(member: CastMember, onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val isFocused by source.collectIsFocusedAsState()
     Column(modifier = Modifier.width(130.dp).clickable(source, null) { onClick() }, horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(modifier = Modifier.size(110.dp).clip(CircleShape).background(if (isFocused) Color.White else Color(0xFF151515)).then(if (isFocused) Modifier.padding(5.dp).clip(CircleShape) else Modifier)) {
+        Box(modifier = Modifier
+            .size(110.dp)
+            .clip(CircleShape)
+            .background(if (isFocused) Color.White else Color(0xFF151515))
+            .then(if (isFocused) Modifier.padding(5.dp).clip(CircleShape) else Modifier)) {
             AsyncImage(model = member.imageUrl, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         }
         Spacer(modifier = Modifier.height(10.dp))
