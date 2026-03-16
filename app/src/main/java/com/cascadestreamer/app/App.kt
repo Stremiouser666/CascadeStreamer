@@ -15,6 +15,7 @@ import com.cascadestreamer.app.data.Video
 import com.cascadestreamer.app.managers.TVMazeManager
 import com.cascadestreamer.app.managers.TVMazeShow
 import com.cascadestreamer.app.states.AppState
+import com.cascadestreamer.app.ui.CastMember
 import com.cascadestreamer.app.ui.HomeScreen
 import com.cascadestreamer.app.ui.SettingsScreen
 import com.cascadestreamer.app.ui.InfoScreen
@@ -183,7 +184,20 @@ fun CascadeStreamerApp(
                     scope.launch {
                         val tvMazeManager = TVMazeManager()
                         val backgroundUrl = tvMazeManager.getShowBackgroundImage(show.id)
-                        selectedSeries.value = SeriesData(show = show, backdropUrl = backgroundUrl)
+                        val castList = tvMazeManager.getShowCast(show.id).map { castMember ->
+                            CastMember(
+                                id = castMember.person.id,
+                                name = castMember.person.name,
+                                character = castMember.character.name,
+                                imageUrl = castMember.person.image?.medium,
+                                biography = null
+                            )
+                        }
+                        selectedSeries.value = SeriesData(
+                            show = show,
+                            backdropUrl = backgroundUrl,
+                            cast = castList
+                        )
                         currentScreen.value = Screen.SERIES
                     }
                 },
