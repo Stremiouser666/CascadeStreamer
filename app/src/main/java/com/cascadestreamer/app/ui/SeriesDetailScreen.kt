@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -75,8 +76,8 @@ fun SeriesDetailScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
-    // --- 1. REMOTE BACK BUTTON HANDLING ---
-    // If any sub-state is active, the remote back button clears it instead of exiting the app.
+    // --- 1. HARD BACK BUTTON HANDLING ---
+    // Intercepts remote "Back" button to exit sub-menus instead of the whole app
     BackHandler(enabled = selectedCast.value != null || selectedEpisode.value != null || showFullDescription.value) {
         when {
             showFullDescription.value -> showFullDescription.value = false
@@ -127,21 +128,45 @@ fun SeriesDetailScreen(
     // --- MAIN SCREEN CONTENT ---
     Column(modifier = Modifier.fillMaxSize().background(Color.Black).verticalScroll(scrollState)) {
         
-        // FIX: Removed .focusable() from this Box. It was a "Focus Trap" stealing input from children.
-        Box(modifier = Modifier.fillMaxWidth().height(450.dp)) {
+        // 2. THE TOP BACK ARROW (WINGDING STYLE)
+        // Focusable target that scrolls the view to the top when focused
+        val backIconInteraction = remember { MutableInteractionSource() }
+        val isBackIconFocused by backIconInteraction.collectIsFocusedAsState()
+
+        Box(
+            modifier = Modifier
+                .padding(start = 32.dp, top = 24.dp, bottom = 12.dp)
+                .size(48.dp)
+                .onFocusChanged { if (it.isFocused) scope.launch { scrollState.animateScrollTo(0) } }
+                .clickable(backIconInteraction, null) { onBack() }
+                .background(
+                    if (isBackIconFocused) Color.White.copy(alpha = 0.2f) else Color.Transparent,
+                    CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.ArrowBack,
+                contentDescription = "Return to Main",
+                tint = if (isBackIconFocused) Color.Cyan else Color.White,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+
+        // 3. THE HERO SECTION
+        Box(modifier = Modifier.fillMaxWidth().height(420.dp)) {
             val imageUrl = series.backdropUrl ?: series.show.image?.original
             AsyncImage(model = imageUrl, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
 
             Box(modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .fillMaxHeight(0.45f)
+                .fillMaxHeight(0.5f)
                 .background(Color.Black.copy(alpha = 0.2f))
                 .padding(horizontal = 32.dp, vertical = 16.dp)) {
                 
                 Row(verticalAlignment = Alignment.Top) {
                     Column(horizontalAlignment = Alignment.Start) {
-                        // Focusable Play & Favorite buttons
                         TVFocusButton(text = "▶ Play", onClick = onPlay, width = 160.dp, focusColor = Color(0xFF00A36C))
                         Spacer(modifier = Modifier.height(12.dp))
                         TVFocusButton(text = "♡", onClick = {}, isIcon = true, focusColor = Color.Red)
@@ -151,12 +176,12 @@ fun SeriesDetailScreen(
                     
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "★ ${series.show.rating?.average ?: "N/A"}  •  ${series.show.premiered?.take(4) ?: "N/A"}  •  ${series.show.genres.joinToString(", ")}", 
+                            text = "★ ${series.show.rating?.average ?: "N/A"}  •  ${series.show.premiered?.take(4) ?: "N/A"}", 
                             style = TVShadowStyle.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold)
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         
-                        // FIX: Wrapped Summary in a Surface to make it focusable on TV
+                        // Focusable Summary Target
                         val summaryText = series.show.summary?.replace("<[^>]*>".toRegex(), "") ?: ""
                         val summaryInteraction = remember { MutableInteractionSource() }
                         val isSummaryFocused by summaryInteraction.collectIsFocusedAsState()
@@ -207,7 +232,7 @@ fun SeriesDetailScreen(
         Spacer(modifier = Modifier.height(80.dp))
     }
 
-    // --- FULL DESCRIPTION DIALOG ---
+    // FULL DESCRIPTION DIALOG
     if (showFullDescription.value) {
         var fontSize by remember { mutableStateOf(18.sp) }
         Dialog(onDismissRequest = { showFullDescription.value = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
