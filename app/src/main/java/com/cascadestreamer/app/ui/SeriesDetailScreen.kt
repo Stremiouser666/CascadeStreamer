@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
@@ -81,7 +82,7 @@ fun SeriesDetailScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
-    // REMOTE BACK BUTTON HANDLING
+    // Remote Back Handler
     BackHandler(enabled = selectedCast.value != null || selectedEpisode.value != null || showFullDescription.value) {
         when {
             showFullDescription.value -> showFullDescription.value = false
@@ -90,22 +91,17 @@ fun SeriesDetailScreen(
         }
     }
 
-    // --- FIX: FETCH EPISODES WHEN SEASON CHANGES ---
+    // Logic to fetch episodes when season changes
     LaunchedEffect(series.show.id, selectedSeason.intValue) {
         scope.launch {
             val allEpisodes = tvMazeManager.getShowEpisodes(series.show.id)
-            
-            // Populate the season list only once
             if (allSeasons.value.isEmpty()) {
                 allSeasons.value = allEpisodes.mapNotNull { it.season }.distinct().sorted()
             }
-            
-            // Filter episodes based on the currently selected season
             episodes.value = allEpisodes.filter { it.season == selectedSeason.intValue }
         }
     }
 
-    // Navigation Layers
     if (selectedCast.value != null) {
         ActorWikiProfile(member = selectedCast.value!!, onBack = { selectedCast.value = null })
         return
@@ -132,46 +128,46 @@ fun SeriesDetailScreen(
         return
     }
 
-    // MAIN CONTENT
     Column(modifier = Modifier.fillMaxSize().background(Color.Black).verticalScroll(scrollState)) {
+        
+        // Focus Anchor
+        Spacer(modifier = Modifier.fillMaxWidth().height(1.dp).onFocusChanged { if (it.isFocused) scope.launch { scrollState.animateScrollTo(0) } }.focusable())
 
-        // HIDDEN SCROLL TARGET (Top Focus Anchor)
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .onFocusChanged { if (it.isFocused) scope.launch { scrollState.animateScrollTo(0) } }
-                .focusable()
-        )
-
+        // HEADER SECTION
         Box(modifier = Modifier.fillMaxWidth().height(450.dp)) {
             val imageUrl = series.backdropUrl ?: series.show.image?.original
             AsyncImage(model = imageUrl, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
 
+            // OVERLAY BOX WITH GRADIENT
             Box(modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .fillMaxHeight(0.25f) // 25% height as requested
-                .background(Color.Black.copy(alpha = 0.2f))
-                .padding(horizontal = 32.dp, vertical = 16.dp)) {
+                .fillMaxHeight(0.25f)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)),
+                        startY = 0f
+                    )
+                )
+                .padding(horizontal = 32.dp, vertical = 8.dp)) {
 
-                Row(verticalAlignment = Alignment.Top) {
-                    Column(horizontalAlignment = Alignment.Start) {
-                        TVFocusButton(text = "▶ Play", onClick = onPlay, width = 160.dp, focusColor = Color(0xFF00A36C))
-                        Spacer(modifier = Modifier.height(12.dp))
-                        TVFocusButton(text = "♡", onClick = {}, isIcon = true, focusColor = Color.Red)
+                Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
+                    // Slimmer Buttons
+                    Column(verticalArrangement = Arrangement.Center) {
+                        TVFocusButton(text = "▶ Play", onClick = onPlay, width = 120.dp, height = 40.dp, focusColor = Color(0xFF00A36C), hasBorder = false)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TVFocusButton(text = "♡", onClick = {}, isIcon = true, height = 40.dp, focusColor = Color.Red, hasBorder = false)
                     }
 
-                    Spacer(modifier = Modifier.width(28.dp))
+                    Spacer(modifier = Modifier.width(24.dp))
 
+                    // Text & Summary
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "★ ${series.show.rating?.average ?: "N/A"}  •  ${series.show.premiered?.take(4) ?: "N/A"}", 
-                            style = TVShadowStyle.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                            style = TVShadowStyle.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold)
                         )
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Focusable Summary Surface
+                        
                         val summaryText = series.show.summary?.replace("<[^>]*>".toRegex(), "") ?: ""
                         val summaryInteraction = remember { MutableInteractionSource() }
                         val isSummaryFocused by summaryInteraction.collectIsFocusedAsState()
@@ -186,9 +182,9 @@ fun SeriesDetailScreen(
                         ) {
                             Text(
                                 text = summaryText, 
-                                style = TVShadowStyle.copy(fontSize = 15.sp, lineHeight = 22.sp), 
-                                maxLines = 3, 
-                                modifier = Modifier.padding(12.dp)
+                                style = TVShadowStyle.copy(fontSize = 13.sp, lineHeight = 18.sp), 
+                                maxLines = 2, 
+                                modifier = Modifier.padding(8.dp)
                             )
                         }
                     }
@@ -200,11 +196,7 @@ fun SeriesDetailScreen(
         SectionTitle("SEASONS")
         Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 32.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             allSeasons.value.forEach { season ->
-                TVSeasonSelectButton(
-                    season = season, 
-                    isSelected = selectedSeason.intValue == season, 
-                    onClick = { selectedSeason.intValue = season }
-                )
+                TVSeasonSelectButton(season = season, isSelected = selectedSeason.intValue == season, onClick = { selectedSeason.intValue = season })
             }
         }
 
@@ -226,7 +218,7 @@ fun SeriesDetailScreen(
         Spacer(modifier = Modifier.height(80.dp))
     }
 
-    // Full Description Dialog
+    // Smooth Scrolling Dialog
     if (showFullDescription.value) {
         var fontSize by remember { mutableStateOf(18.sp) }
         val dialogScrollState = rememberScrollState()
@@ -236,43 +228,12 @@ fun SeriesDetailScreen(
                 Column(modifier = Modifier.fillMaxWidth(0.85f).align(Alignment.Center)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Summary", style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
-                        
-                        // --- SMOOTH SCROLL CONTROLS ---
                         Spacer(modifier = Modifier.width(20.dp))
-                        TVFocusButton(
-                            text = "↑", 
-                            onClick = { 
-                                scope.launch { 
-                                    dialogScrollState.animateScrollBy(
-                                        value = -250f, 
-                                        animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
-                                    ) 
-                                } 
-                            }, 
-                            isIcon = true
-                        )
+                        TVFocusButton(text = "↑", onClick = { scope.launch { dialogScrollState.animateScrollBy(-250f, tween(800, easing = FastOutSlowInEasing)) } }, isIcon = true, height = 48.dp)
                         Spacer(modifier = Modifier.width(8.dp))
-                        TVFocusButton(
-                            text = "↓", 
-                            onClick = { 
-                                scope.launch { 
-                                    dialogScrollState.animateScrollBy(
-                                        value = 250f, 
-                                        animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
-                                    ) 
-                                } 
-                            }, 
-                            isIcon = true
-                        )
-                        
+                        TVFocusButton(text = "↓", onClick = { scope.launch { dialogScrollState.animateScrollBy(250f, tween(800, easing = FastOutSlowInEasing)) } }, isIcon = true, height = 48.dp)
                         Spacer(modifier = Modifier.weight(1f))
-                        
-                        Text("Size: ", color = Color.Gray, fontSize = 14.sp)
-                        TVFocusButton(text = "—", onClick = { if (fontSize.value > 12) fontSize = (fontSize.value - 2).sp }, isIcon = true)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        TVFocusButton(text = "+", onClick = { if (fontSize.value < 40) fontSize = (fontSize.value + 2).sp }, isIcon = true)
-                        Spacer(modifier = Modifier.width(20.dp))
-                        TVFocusButton(text = "✕", onClick = { showFullDescription.value = false }, isIcon = true)
+                        TVFocusButton(text = "✕", onClick = { showFullDescription.value = false }, isIcon = true, height = 48.dp)
                     }
                     Spacer(modifier = Modifier.height(30.dp))
                     Column(modifier = Modifier.verticalScroll(dialogScrollState)) {
@@ -287,45 +248,30 @@ fun SeriesDetailScreen(
 // --- 3. HELPER COMPONENTS ---
 
 @Composable
-fun SectionTitle(text: String) {
-    Text(text = text, modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp), style = TVShadowStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.Gray))
-}
-
-@Composable
-fun TVBackButton(onBack: () -> Unit, label: String) {
-    val source = remember { MutableInteractionSource() }
-    val isFocused by source.collectIsFocusedAsState()
-    Row(
-        modifier = Modifier
-            .padding(24.dp)
-            .clickable(source, null) { onBack() }
-            .background(if (isFocused) Color.White.copy(alpha = 0.1f) else Color.Transparent, RoundedCornerShape(8.dp))
-            .padding(8.dp), 
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(Icons.Default.ArrowBack, null, tint = if (isFocused) Color.Cyan else Color.White)
-        Spacer(modifier = Modifier.width(12.dp))
-        Text(label, style = TVShadowStyle.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (isFocused) Color.Cyan else Color.White))
-    }
-}
-
-@Composable
-fun TVFocusButton(text: String, onClick: () -> Unit, width: androidx.compose.ui.unit.Dp = 60.dp, isIcon: Boolean = false, focusColor: Color = Color.White) {
+fun TVFocusButton(
+    text: String, 
+    onClick: () -> Unit, 
+    width: androidx.compose.ui.unit.Dp = 60.dp, 
+    height: androidx.compose.ui.unit.Dp = 52.dp,
+    isIcon: Boolean = false, 
+    focusColor: Color = Color.White,
+    hasBorder: Boolean = true
+) {
     val source = remember { MutableInteractionSource() }
     val isFocused by source.collectIsFocusedAsState()
     Button(
         onClick = onClick,
         interactionSource = source,
-        modifier = Modifier.height(if (isIcon) 48.dp else 52.dp).then(if (isIcon) Modifier.width(48.dp) else Modifier.width(width)),
+        modifier = Modifier.height(height).width(if (isIcon) height else width),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isFocused) focusColor else Color.Transparent,
+            containerColor = if (isFocused) focusColor else Color.White.copy(alpha = 0.1f),
             contentColor = if (isFocused) Color.Black else Color.White
         ),
         shape = RoundedCornerShape(8.dp),
         contentPadding = PaddingValues(0.dp),
-        border = if (!isFocused) BorderStroke(2.dp, Color.White) else null
+        border = if (isFocused) null else if (hasBorder) BorderStroke(2.dp, Color.White) else null
     ) {
-        Text(text, fontWeight = FontWeight.Black, fontSize = if (isIcon) 20.sp else 16.sp)
+        Text(text, fontWeight = FontWeight.Black, fontSize = if (isIcon) 18.sp else 14.sp)
     }
 }
 
@@ -352,12 +298,7 @@ fun TVEpisodeCard(episode: TVMazeEpisode, fallback: String?, onClick: () -> Unit
     val source = remember { MutableInteractionSource() }
     val isFocused by source.collectIsFocusedAsState()
     Column(modifier = Modifier.width(280.dp).clickable(source, null) { onClick() }) {
-        Box(modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(16f/9f)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(0xFF151515))
-            .then(if (isFocused) Modifier.border(4.dp, Color.White, RoundedCornerShape(12.dp)).padding(4.dp) else Modifier)) {
+        Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f/9f).clip(RoundedCornerShape(12.dp)).background(Color(0xFF151515)).then(if (isFocused) Modifier.border(4.dp, Color.White, RoundedCornerShape(12.dp)).padding(4.dp) else Modifier)) {
             AsyncImage(model = episode.image?.medium ?: fallback, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         }
         Spacer(modifier = Modifier.height(10.dp))
@@ -370,16 +311,27 @@ fun TVCastCircleCard(member: CastMember, onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val isFocused by source.collectIsFocusedAsState()
     Column(modifier = Modifier.width(130.dp).clickable(source, null) { onClick() }, horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(modifier = Modifier
-            .size(110.dp)
-            .clip(CircleShape)
-            .background(if (isFocused) Color.White else Color(0xFF151515))
-            .then(if (isFocused) Modifier.padding(5.dp).clip(CircleShape) else Modifier)) {
+        Box(modifier = Modifier.size(110.dp).clip(CircleShape).background(if (isFocused) Color.White else Color(0xFF151515)).then(if (isFocused) Modifier.padding(5.dp).clip(CircleShape) else Modifier)) {
             AsyncImage(model = member.imageUrl, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         }
         Spacer(modifier = Modifier.height(10.dp))
         Text(member.name, style = TVShadowStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold), maxLines = 1)
-        Text(member.character, style = TVShadowStyle.copy(fontSize = 12.sp, color = Color.Gray), maxLines = 1)
+    }
+}
+
+@Composable
+fun SectionTitle(text: String) {
+    Text(text = text, modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp), style = TVShadowStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.Gray))
+}
+
+@Composable
+fun TVBackButton(onBack: () -> Unit, label: String) {
+    val source = remember { MutableInteractionSource() }
+    val isFocused by source.collectIsFocusedAsState()
+    Row(modifier = Modifier.padding(24.dp).clickable(source, null) { onBack() }.background(if (isFocused) Color.White.copy(alpha = 0.1f) else Color.Transparent, RoundedCornerShape(8.dp)).padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Default.ArrowBack, null, tint = if (isFocused) Color.Cyan else Color.White)
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(label, style = TVShadowStyle.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = if (isFocused) Color.Cyan else Color.White))
     }
 }
 
