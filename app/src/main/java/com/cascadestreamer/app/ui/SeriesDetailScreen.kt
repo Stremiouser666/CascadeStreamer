@@ -30,7 +30,6 @@ import com.cascadestreamer.app.managers.TVMazeShow
 import com.cascadestreamer.app.ui.templates.EpisodeDetailsTemplate
 import kotlinx.coroutines.launch
 
-// DATA CLASSES
 data class CastMember(
     val id: Int,
     val name: String,
@@ -111,22 +110,19 @@ fun SeriesDetailScreen(
         return
     }
 
-    // ROOT BOX
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        
-        // BACKGROUND IMAGE (Now fills entire screen without gradient)
         val imageUrl = series.backdropUrl ?: series.show.image?.original
         AsyncImage(
-            model = imageUrl, 
-            contentDescription = null, 
-            modifier = Modifier.fillMaxSize(), 
+            model = imageUrl,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop
         )
 
-        // CONTENT LAYER (Scrollable)
         Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
-            
-            // HERO SECTION BOX (Maintains original layout height)
+            // THE HIDDEN SPACER (Crucial for scroll-to-top focus logic)
+            Spacer(modifier = Modifier.height(1.dp).focusable())
+
             Box(modifier = Modifier.fillMaxWidth().height(450.dp)) {
                 Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 32.dp, vertical = 16.dp)) {
                     Row(verticalAlignment = Alignment.Top) {
@@ -175,12 +171,22 @@ fun SeriesDetailScreen(
 
     if (showFullDescription.value) {
         var fontSize by remember { mutableStateOf(18.sp) }
+        val dialogScrollState = rememberScrollState()
+        val coroutineScope = rememberCoroutineScope()
+
         Dialog(onDismissRequest = { showFullDescription.value = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
             Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.95f)).padding(60.dp)) {
                 Column(modifier = Modifier.fillMaxWidth(0.85f).align(Alignment.Center)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Summary", style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
                         Spacer(modifier = Modifier.weight(1f))
+                        
+                        // RESTORED SCROLL ARROWS
+                        TVFocusButton(text = "↑", onClick = { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 500) } }, isIcon = true)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TVFocusButton(text = "↓", onClick = { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value + 500) } }, isIcon = true)
+                        
+                        Spacer(modifier = Modifier.width(20.dp))
                         Text("Size: ", color = Color.Gray, fontSize = 14.sp)
                         TVFocusButton(text = "—", onClick = { if (fontSize.value > 12) fontSize = (fontSize.value - 2).sp }, isIcon = true)
                         Spacer(modifier = Modifier.width(8.dp))
@@ -189,7 +195,7 @@ fun SeriesDetailScreen(
                         TVFocusButton(text = "✕", onClick = { showFullDescription.value = false }, isIcon = true)
                     }
                     Spacer(modifier = Modifier.height(30.dp))
-                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Column(modifier = Modifier.verticalScroll(dialogScrollState)) {
                         Text(text = series.show.summary?.replace("<[^>]*>".toRegex(), "") ?: "", style = TVShadowStyle.copy(fontSize = fontSize, lineHeight = (fontSize.value * 1.5).sp))
                     }
                 }
@@ -198,7 +204,6 @@ fun SeriesDetailScreen(
     }
 }
 
-// HELPER COMPOSABLES
 @Composable
 fun SectionTitle(text: String) {
     Text(text = text, modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp), style = TVShadowStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.Gray))
@@ -222,12 +227,13 @@ fun TVFocusButton(text: String, onClick: () -> Unit, width: androidx.compose.ui.
         interactionSource = source,
         modifier = Modifier.height(if (isIcon) 48.dp else 52.dp).then(if (isIcon) Modifier.width(48.dp) else Modifier.width(width)),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isFocused) focusColor else Color.Transparent,
+            // UPDATED: 5% Grey transparent background when NOT focused
+            containerColor = if (isFocused) focusColor else Color.White.copy(alpha = 0.05f),
             contentColor = if (isFocused) Color.Black else Color.White
         ),
         shape = RoundedCornerShape(8.dp),
         contentPadding = PaddingValues(0.dp),
-        border = if (!isFocused) BorderStroke(2.dp, Color.White) else null
+        border = if (!isFocused) BorderStroke(2.dp, Color.White.copy(alpha = 0.15f)) else null
     ) {
         Text(text, fontWeight = FontWeight.Black, fontSize = if (isIcon) 20.sp else 16.sp)
     }
@@ -240,9 +246,17 @@ fun TVSeasonSelectButton(season: Int, isSelected: Boolean, onClick: () -> Unit) 
     Button(
         onClick = onClick,
         interactionSource = source,
-        colors = ButtonDefaults.buttonColors(containerColor = when { isFocused -> Color.White; isSelected -> Color(0xFF388E3C); else -> Color.Transparent }, contentColor = if (isFocused) Color.Black else Color.White),
+        colors = ButtonDefaults.buttonColors(
+            // UPDATED: 5% Grey transparent background when NOT focused/selected
+            containerColor = when { 
+                isFocused -> Color.White 
+                isSelected -> Color(0xFF388E3C) 
+                else -> Color.White.copy(alpha = 0.05f) 
+            }, 
+            contentColor = if (isFocused) Color.Black else Color.White
+        ),
         shape = RoundedCornerShape(8.dp),
-        border = if (!isFocused && !isSelected) ButtonDefaults.outlinedButtonBorder else null
+        border = if (!isFocused && !isSelected) BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)) else null
     ) {
         Text("Season $season", fontWeight = FontWeight.Bold)
     }
