@@ -30,8 +30,6 @@ import com.cascadestreamer.app.managers.TVMazeShow
 import com.cascadestreamer.app.ui.templates.EpisodeDetailsTemplate
 import kotlinx.coroutines.launch
 
-// --- DATA MODELS (Fixes "Unresolved Reference: SeriesData/CastMember") ---
-
 data class CastMember(
     val id: Int,
     val name: String,
@@ -74,10 +72,6 @@ fun SeriesDetailScreen(
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
 
-    val heroInteractionSource = remember { MutableInteractionSource() }
-    val isHeroFocused by heroInteractionSource.collectIsFocusedAsState()
-    LaunchedEffect(isHeroFocused) { if (isHeroFocused) scrollState.animateScrollTo(0) }
-
     LaunchedEffect(series.show.id) {
         scope.launch {
             val allEpisodes = tvMazeManager.getShowEpisodes(series.show.id)
@@ -117,7 +111,7 @@ fun SeriesDetailScreen(
     }
 
     Column(modifier = Modifier.fillMaxSize().background(Color.Black).verticalScroll(scrollState)) {
-        Box(modifier = Modifier.fillMaxWidth().height(450.dp).focusable(interactionSource = heroInteractionSource)) {
+        Box(modifier = Modifier.fillMaxWidth().height(450.dp)) {
             val imageUrl = series.backdropUrl ?: series.show.image?.original
             AsyncImage(model = imageUrl, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
 
@@ -189,8 +183,6 @@ fun SeriesDetailScreen(
         }
     }
 }
-
-// --- HELPER COMPONENTS (Fixes "Unresolved Reference: SectionTitle/TVBackButton/etc") ---
 
 @Composable
 fun SectionTitle(text: String) {
