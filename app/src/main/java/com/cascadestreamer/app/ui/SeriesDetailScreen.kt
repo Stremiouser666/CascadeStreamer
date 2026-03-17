@@ -32,7 +32,7 @@ import com.cascadestreamer.app.managers.TVMazeShow
 import com.cascadestreamer.app.ui.templates.EpisodeDetailsTemplate
 import kotlinx.coroutines.launch
 
-// --- 1. DATA MODELS (Moved here so they are visible to the whole file) ---
+// --- 1. DATA MODELS ---
 
 data class CastMember(
     val id: Int,
@@ -128,7 +128,7 @@ fun SeriesDetailScreen(
 
     // MAIN CONTENT
     Column(modifier = Modifier.fillMaxSize().background(Color.Black).verticalScroll(scrollState)) {
-        
+
         // HIDDEN SCROLL TARGET (Top Focus Anchor)
         Spacer(
             modifier = Modifier
@@ -148,23 +148,23 @@ fun SeriesDetailScreen(
                 .fillMaxHeight(0.5f)
                 .background(Color.Black.copy(alpha = 0.2f))
                 .padding(horizontal = 32.dp, vertical = 16.dp)) {
-                
+
                 Row(verticalAlignment = Alignment.Top) {
                     Column(horizontalAlignment = Alignment.Start) {
                         TVFocusButton(text = "▶ Play", onClick = onPlay, width = 160.dp, focusColor = Color(0xFF00A36C))
                         Spacer(modifier = Modifier.height(12.dp))
                         TVFocusButton(text = "♡", onClick = {}, isIcon = true, focusColor = Color.Red)
                     }
-                    
+
                     Spacer(modifier = Modifier.width(28.dp))
-                    
+
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "★ ${series.show.rating?.average ?: "N/A"}  •  ${series.show.premiered?.take(4) ?: "N/A"}", 
                             style = TVShadowStyle.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold)
                         )
                         Spacer(modifier = Modifier.height(10.dp))
-                        
+
                         // Focusable Summary Surface
                         val summaryText = series.show.summary?.replace("<[^>]*>".toRegex(), "") ?: ""
                         val summaryInteraction = remember { MutableInteractionSource() }
@@ -219,12 +219,22 @@ fun SeriesDetailScreen(
     // Full Description Dialog
     if (showFullDescription.value) {
         var fontSize by remember { mutableStateOf(18.sp) }
+        val dialogScrollState = rememberScrollState() // New state for dialog scrolling
+
         Dialog(onDismissRequest = { showFullDescription.value = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
             Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.95f)).padding(60.dp)) {
                 Column(modifier = Modifier.fillMaxWidth(0.85f).align(Alignment.Center)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Summary", style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+                        
+                        // --- SCROLL CONTROLS ---
+                        Spacer(modifier = Modifier.width(20.dp))
+                        TVFocusButton(text = "↑", onClick = { scope.launch { dialogScrollState.animateScrollBy(-400f) } }, isIcon = true)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TVFocusButton(text = "↓", onClick = { scope.launch { dialogScrollState.animateScrollBy(400f) } }, isIcon = true)
+                        
                         Spacer(modifier = Modifier.weight(1f))
+                        
                         Text("Size: ", color = Color.Gray, fontSize = 14.sp)
                         TVFocusButton(text = "—", onClick = { if (fontSize.value > 12) fontSize = (fontSize.value - 2).sp }, isIcon = true)
                         Spacer(modifier = Modifier.width(8.dp))
@@ -233,7 +243,7 @@ fun SeriesDetailScreen(
                         TVFocusButton(text = "✕", onClick = { showFullDescription.value = false }, isIcon = true)
                     }
                     Spacer(modifier = Modifier.height(30.dp))
-                    Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Column(modifier = Modifier.verticalScroll(dialogScrollState)) {
                         Text(text = series.show.summary?.replace("<[^>]*>".toRegex(), "") ?: "", style = TVShadowStyle.copy(fontSize = fontSize, lineHeight = (fontSize.value * 1.5).sp))
                     }
                 }
