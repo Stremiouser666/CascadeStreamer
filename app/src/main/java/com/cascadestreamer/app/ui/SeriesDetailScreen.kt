@@ -91,7 +91,7 @@ fun SeriesDetailScreen(
         }
     }
 
-    // Logic to fetch episodes when season changes
+    // Season Logic: Updates list when selectedSeason changes
     LaunchedEffect(series.show.id, selectedSeason.intValue) {
         scope.launch {
             val allEpisodes = tvMazeManager.getShowEpisodes(series.show.id)
@@ -138,21 +138,21 @@ fun SeriesDetailScreen(
             val imageUrl = series.backdropUrl ?: series.show.image?.original
             AsyncImage(model = imageUrl, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
 
-            // OVERLAY BOX WITH GRADIENT
+            // OVERLAY BOX WITH GRADIENT & 25% HEIGHT
             Box(modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .fillMaxHeight(0.25f)
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.8f)),
+                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f)),
                         startY = 0f
                     )
                 )
                 .padding(horizontal = 32.dp, vertical = 8.dp)) {
 
                 Row(modifier = Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-                    // Slimmer Buttons
+                    // Slimmer Clean Buttons
                     Column(verticalArrangement = Arrangement.Center) {
                         TVFocusButton(text = "▶ Play", onClick = onPlay, width = 120.dp, height = 40.dp, focusColor = Color(0xFF00A36C), hasBorder = false)
                         Spacer(modifier = Modifier.height(8.dp))
@@ -161,7 +161,7 @@ fun SeriesDetailScreen(
 
                     Spacer(modifier = Modifier.width(24.dp))
 
-                    // Text & Summary
+                    // Text & Summary (2 lines max to fit 25% height)
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "★ ${series.show.rating?.average ?: "N/A"}  •  ${series.show.premiered?.take(4) ?: "N/A"}", 
@@ -218,7 +218,7 @@ fun SeriesDetailScreen(
         Spacer(modifier = Modifier.height(80.dp))
     }
 
-    // Smooth Scrolling Dialog
+    // Full Description Dialog with Fixed Font Controls
     if (showFullDescription.value) {
         var fontSize by remember { mutableStateOf(18.sp) }
         val dialogScrollState = rememberScrollState()
@@ -228,16 +228,33 @@ fun SeriesDetailScreen(
                 Column(modifier = Modifier.fillMaxWidth(0.85f).align(Alignment.Center)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Summary", style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+                        
                         Spacer(modifier = Modifier.width(20.dp))
+                        
+                        // Scroll Controls
                         TVFocusButton(text = "↑", onClick = { scope.launch { dialogScrollState.animateScrollBy(-250f, tween(800, easing = FastOutSlowInEasing)) } }, isIcon = true, height = 48.dp)
                         Spacer(modifier = Modifier.width(8.dp))
                         TVFocusButton(text = "↓", onClick = { scope.launch { dialogScrollState.animateScrollBy(250f, tween(800, easing = FastOutSlowInEasing)) } }, isIcon = true, height = 48.dp)
+                        
                         Spacer(modifier = Modifier.weight(1f))
+                        
+                        // Font Size Controls (Fixed)
+                        Text("Size: ", color = Color.Gray, fontSize = 14.sp)
+                        TVFocusButton(text = "—", onClick = { if (fontSize.value > 12) fontSize = (fontSize.value - 2).sp }, isIcon = true, height = 44.dp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TVFocusButton(text = "+", onClick = { if (fontSize.value < 40) fontSize = (fontSize.value + 2).sp }, isIcon = true, height = 44.dp)
+                        
+                        Spacer(modifier = Modifier.width(20.dp))
                         TVFocusButton(text = "✕", onClick = { showFullDescription.value = false }, isIcon = true, height = 48.dp)
                     }
+                    
                     Spacer(modifier = Modifier.height(30.dp))
+                    
                     Column(modifier = Modifier.verticalScroll(dialogScrollState)) {
-                        Text(text = series.show.summary?.replace("<[^>]*>".toRegex(), "") ?: "", style = TVShadowStyle.copy(fontSize = fontSize, lineHeight = (fontSize.value * 1.5).sp))
+                        Text(
+                            text = series.show.summary?.replace("<[^>]*>".toRegex(), "") ?: "", 
+                            style = TVShadowStyle.copy(fontSize = fontSize, lineHeight = (fontSize.value * 1.5).sp)
+                        )
                     }
                 }
             }
