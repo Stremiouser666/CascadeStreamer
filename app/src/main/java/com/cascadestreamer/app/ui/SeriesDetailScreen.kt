@@ -1,8 +1,10 @@
 package com.cascadestreamer.app.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
-import androidx.compose.foundation.gestures.animateScrollBy // Added this import
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
@@ -88,15 +90,18 @@ fun SeriesDetailScreen(
         }
     }
 
-    LaunchedEffect(series.show.id) {
+    // --- FIX: FETCH EPISODES WHEN SEASON CHANGES ---
+    LaunchedEffect(series.show.id, selectedSeason.intValue) {
         scope.launch {
             val allEpisodes = tvMazeManager.getShowEpisodes(series.show.id)
-            val seasons = allEpisodes.mapNotNull { it.season }.distinct().sorted()
-            allSeasons.value = seasons
-            if (seasons.isNotEmpty()) {
-                selectedSeason.intValue = seasons.first()
-                episodes.value = allEpisodes.filter { it.season == selectedSeason.intValue }
+            
+            // Populate the season list only once
+            if (allSeasons.value.isEmpty()) {
+                allSeasons.value = allEpisodes.mapNotNull { it.season }.distinct().sorted()
             }
+            
+            // Filter episodes based on the currently selected season
+            episodes.value = allEpisodes.filter { it.season == selectedSeason.intValue }
         }
     }
 
@@ -146,7 +151,7 @@ fun SeriesDetailScreen(
             Box(modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .fillMaxHeight(0.5f)
+                .fillMaxHeight(0.25f) // 25% height as requested
                 .background(Color.Black.copy(alpha = 0.2f))
                 .padding(horizontal = 32.dp, vertical = 16.dp)) {
 
@@ -195,7 +200,11 @@ fun SeriesDetailScreen(
         SectionTitle("SEASONS")
         Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 32.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             allSeasons.value.forEach { season ->
-                TVSeasonSelectButton(season = season, isSelected = selectedSeason.intValue == season, onClick = { selectedSeason.intValue = season })
+                TVSeasonSelectButton(
+                    season = season, 
+                    isSelected = selectedSeason.intValue == season, 
+                    onClick = { selectedSeason.intValue = season }
+                )
             }
         }
 
@@ -228,11 +237,33 @@ fun SeriesDetailScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Summary", style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
                         
-                        // --- SCROLL CONTROLS ---
+                        // --- SMOOTH SCROLL CONTROLS ---
                         Spacer(modifier = Modifier.width(20.dp))
-                        TVFocusButton(text = "↑", onClick = { scope.launch { dialogScrollState.animateScrollBy(-400f) } }, isIcon = true)
+                        TVFocusButton(
+                            text = "↑", 
+                            onClick = { 
+                                scope.launch { 
+                                    dialogScrollState.animateScrollBy(
+                                        value = -250f, 
+                                        animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
+                                    ) 
+                                } 
+                            }, 
+                            isIcon = true
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
-                        TVFocusButton(text = "↓", onClick = { scope.launch { dialogScrollState.animateScrollBy(400f) } }, isIcon = true)
+                        TVFocusButton(
+                            text = "↓", 
+                            onClick = { 
+                                scope.launch { 
+                                    dialogScrollState.animateScrollBy(
+                                        value = 250f, 
+                                        animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing)
+                                    ) 
+                                } 
+                            }, 
+                            isIcon = true
+                        )
                         
                         Spacer(modifier = Modifier.weight(1f))
                         
