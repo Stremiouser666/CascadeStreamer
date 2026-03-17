@@ -120,7 +120,7 @@ fun SeriesDetailScreen(
         )
 
         Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
-            // THE HIDDEN SPACER (Crucial for scroll-to-top focus logic)
+            // RESTORED: Hidden focusable anchor for scroll-to-top logic
             Spacer(modifier = Modifier.height(1.dp).focusable())
 
             Box(modifier = Modifier.fillMaxWidth().height(450.dp)) {
@@ -181,7 +181,7 @@ fun SeriesDetailScreen(
                         Text("Summary", style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
                         Spacer(modifier = Modifier.weight(1f))
                         
-                        // RESTORED SCROLL ARROWS
+                        // RESTORED: Scroll Arrows
                         TVFocusButton(text = "↑", onClick = { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 500) } }, isIcon = true)
                         Spacer(modifier = Modifier.width(8.dp))
                         TVFocusButton(text = "↓", onClick = { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value + 500) } }, isIcon = true)
@@ -227,13 +227,13 @@ fun TVFocusButton(text: String, onClick: () -> Unit, width: androidx.compose.ui.
         interactionSource = source,
         modifier = Modifier.height(if (isIcon) 48.dp else 52.dp).then(if (isIcon) Modifier.width(48.dp) else Modifier.width(width)),
         colors = ButtonDefaults.buttonColors(
-            // UPDATED: 5% Grey transparent background when NOT focused
-            containerColor = if (isFocused) focusColor else Color.White.copy(alpha = 0.05f),
+            // FIXED: 15% Dark/Grey transparent background when not focused
+            containerColor = if (isFocused) focusColor else Color.Black.copy(alpha = 0.15f),
             contentColor = if (isFocused) Color.Black else Color.White
         ),
         shape = RoundedCornerShape(8.dp),
         contentPadding = PaddingValues(0.dp),
-        border = if (!isFocused) BorderStroke(2.dp, Color.White.copy(alpha = 0.15f)) else null
+        border = if (!isFocused) BorderStroke(2.dp, Color.White.copy(alpha = 0.2f)) else null
     ) {
         Text(text, fontWeight = FontWeight.Black, fontSize = if (isIcon) 20.sp else 16.sp)
     }
@@ -247,11 +247,11 @@ fun TVSeasonSelectButton(season: Int, isSelected: Boolean, onClick: () -> Unit) 
         onClick = onClick,
         interactionSource = source,
         colors = ButtonDefaults.buttonColors(
-            // UPDATED: 5% Grey transparent background when NOT focused/selected
+            // FIXED: 15% Dark/Grey transparent background when not focused/selected
             containerColor = when { 
                 isFocused -> Color.White 
                 isSelected -> Color(0xFF388E3C) 
-                else -> Color.White.copy(alpha = 0.05f) 
+                else -> Color.Black.copy(alpha = 0.15f) 
             }, 
             contentColor = if (isFocused) Color.Black else Color.White
         ),
