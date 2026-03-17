@@ -2,6 +2,7 @@ package com.cascadestreamer.app.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.animateScrollBy // Added this import
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
@@ -219,7 +220,7 @@ fun SeriesDetailScreen(
     // Full Description Dialog
     if (showFullDescription.value) {
         var fontSize by remember { mutableStateOf(18.sp) }
-        val dialogScrollState = rememberScrollState() // New state for dialog scrolling
+        val dialogScrollState = rememberScrollState()
 
         Dialog(onDismissRequest = { showFullDescription.value = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
             Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.95f)).padding(60.dp)) {
