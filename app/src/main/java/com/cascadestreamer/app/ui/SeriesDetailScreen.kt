@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
@@ -31,7 +30,7 @@ import com.cascadestreamer.app.managers.TVMazeShow
 import com.cascadestreamer.app.ui.templates.EpisodeDetailsTemplate
 import kotlinx.coroutines.launch
 
-// DATA CLASSES (Moved to top-level for visibility)
+// DATA CLASSES
 data class CastMember(
     val id: Int,
     val name: String,
@@ -86,13 +85,11 @@ fun SeriesDetailScreen(
         }
     }
 
-    // Actor Profile Overlay
     if (selectedCast.value != null) {
         ActorWikiProfile(member = selectedCast.value!!, onBack = { selectedCast.value = null })
         return
     }
 
-    // Episode Details Overlay
     if (selectedEpisode.value != null) {
         Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
             TVBackButton(onBack = { selectedEpisode.value = null }, label = "Back to Series")
@@ -114,45 +111,24 @@ fun SeriesDetailScreen(
         return
     }
 
-    // MAIN SCREEN WITH BACKGROUND HERO
+    // ROOT BOX
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         
-        // 1. BACKGROUND IMAGE (Full Screen)
+        // BACKGROUND IMAGE (Now fills entire screen without gradient)
         val imageUrl = series.backdropUrl ?: series.show.image?.original
         AsyncImage(
-            model = imageUrl,
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
+            model = imageUrl, 
+            contentDescription = null, 
+            modifier = Modifier.fillMaxSize(), 
             contentScale = ContentScale.Crop
         )
 
-        // 2. GRADIENT (Fades the photo into the black UI at the bottom)
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.Black.copy(alpha = 0.4f),
-                            Color.Black.copy(alpha = 0.9f),
-                            Color.Black
-                        )
-                    )
-                )
-        )
-
-        // 3. SCROLLABLE CONTENT
+        // CONTENT LAYER (Scrollable)
         Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
             
-            // HERO INFO BOX (Maintains your 450dp relative positioning)
+            // HERO SECTION BOX (Maintains original layout height)
             Box(modifier = Modifier.fillMaxWidth().height(450.dp)) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .fillMaxWidth()
-                        .padding(horizontal = 32.dp, vertical = 16.dp)
-                ) {
+                Box(modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(horizontal = 32.dp, vertical = 16.dp)) {
                     Row(verticalAlignment = Alignment.Top) {
                         Column(horizontalAlignment = Alignment.Start) {
                             TVFocusButton(text = "▶ Play", onClick = onPlay, width = 160.dp, focusColor = Color(0xFF00A36C))
@@ -161,21 +137,10 @@ fun SeriesDetailScreen(
                         }
                         Spacer(modifier = Modifier.width(28.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "★ ${series.show.rating?.average ?: "N/A"}  •  ${series.show.premiered?.take(4) ?: "N/A"}  •  ${series.show.genres.joinToString(", ")}",
-                                style = TVShadowStyle.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold)
-                            )
+                            Text(text = "★ ${series.show.rating?.average ?: "N/A"}  •  ${series.show.premiered?.take(4) ?: "N/A"}  •  ${series.show.genres.joinToString(", ")}", style = TVShadowStyle.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold))
                             Spacer(modifier = Modifier.height(10.dp))
                             val summaryText = series.show.summary?.replace("<[^>]*>".toRegex(), "") ?: ""
-                            Text(
-                                text = summaryText,
-                                style = TVShadowStyle.copy(fontSize = 15.sp, lineHeight = 22.sp, color = Color.White),
-                                maxLines = 3,
-                                modifier = Modifier
-                                    .clickable { showFullDescription.value = true }
-                                    .background(Color.Black.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                                    .padding(12.dp)
-                            )
+                            Text(text = summaryText, style = TVShadowStyle.copy(fontSize = 15.sp, lineHeight = 22.sp, color = Color.White), maxLines = 3, modifier = Modifier.clickable { showFullDescription.value = true }.background(Color.Black.copy(alpha = 0.3f), RoundedCornerShape(8.dp)).padding(12.dp))
                         }
                     }
                 }
@@ -183,10 +148,7 @@ fun SeriesDetailScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
             SectionTitle("SEASONS")
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 32.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 32.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 allSeasons.value.forEach { season ->
                     TVSeasonSelectButton(season = season, isSelected = selectedSeason.intValue == season, onClick = { selectedSeason.intValue = season })
                 }
@@ -194,10 +156,7 @@ fun SeriesDetailScreen(
 
             Spacer(modifier = Modifier.height(32.dp))
             SectionTitle("EPISODES")
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 32.dp),
-                horizontalArrangement = Arrangement.spacedBy(18.dp)
-            ) {
+            Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 32.dp), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                 episodes.value.forEach { episode ->
                     TVEpisodeCard(episode = episode, fallback = series.posterUrl, onClick = { selectedEpisode.value = episode })
                 }
@@ -205,10 +164,7 @@ fun SeriesDetailScreen(
 
             Spacer(modifier = Modifier.height(40.dp))
             SectionTitle("CAST & CREW")
-            Row(
-                modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 32.dp),
-                horizontalArrangement = Arrangement.spacedBy(28.dp)
-            ) {
+            Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 32.dp), horizontalArrangement = Arrangement.spacedBy(28.dp)) {
                 series.cast.forEach { member ->
                     TVCastCircleCard(member = member, onClick = { selectedCast.value = member })
                 }
@@ -217,7 +173,6 @@ fun SeriesDetailScreen(
         }
     }
 
-    // FULL DESCRIPTION DIALOG
     if (showFullDescription.value) {
         var fontSize by remember { mutableStateOf(18.sp) }
         Dialog(onDismissRequest = { showFullDescription.value = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
@@ -243,7 +198,7 @@ fun SeriesDetailScreen(
     }
 }
 
-// HELPER COMPONENTS
+// HELPER COMPOSABLES
 @Composable
 fun SectionTitle(text: String) {
     Text(text = text, modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp), style = TVShadowStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.Gray))
