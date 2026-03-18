@@ -22,11 +22,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import com.cascadestreamer.app.managers.TVMazeEpisode
 import com.cascadestreamer.app.ui.TVBackButton
 import com.cascadestreamer.app.ui.TVShadowStyle
-import com.cascadestreamer.app.ui.TVFocusButton // Using the one defined in SeriesDetail
+import com.cascadestreamer.app.ui.SectionTitle
+import kotlinx.coroutines.launch
 
 @Composable
 fun EpisodeDetailsTemplate(
@@ -44,145 +47,120 @@ fun EpisodeDetailsTemplate(
     isFavorite: Boolean = false,
     watchedPercentage: Int = 0
 ) {
-    val showDescriptionPopup = remember { mutableStateOf(false) }
+    val showFullDescription = remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
-    // Match hardware back behavior
-    BackHandler { onBack() }
+    // Fixed: Hardware back button now triggers the onBack callback
+    BackHandler(enabled = true) { onBack() }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-            .verticalScroll(scrollState)
-    ) {
-        // 1. Back Button at the top
-        TVBackButton(onBack = onBack, label = "Back to Series")
-
-        // 2. Main Episode Image (Hero Section)
-        Box(
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f))) {
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp)
-                .padding(horizontal = 32.dp)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color.Black.copy(alpha = 0.4f))
+                .fillMaxSize()
+                .verticalScroll(scrollState)
         ) {
-            AsyncImage(
-                model = episode.image?.original ?: episode.image?.medium,
-                contentDescription = episode.name,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-        }
+            // Match the Series Detail header style
+            TVBackButton(onBack = onBack, label = "Back to Series")
 
-        Spacer(modifier = Modifier.height(24.dp))
+            // The 415dp gap doesn't apply here because we want the episode content 
+            // but we add a large top spacer to keep the "airy" feel
+            Spacer(modifier = Modifier.height(60.dp))
 
-        // 3. Info & Controls Row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 32.dp),
-            horizontalArrangement = Arrangement.spacedBy(28.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            // Left Side: Stacked Controls
-            Column(
-                modifier = Modifier.width(160.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Play with Progress
-                OvalProgressPlayButton(
-                    watchedPercentage = watchedPercentage,
-                    onPlay = onPlay
-                )
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
+                Row(verticalAlignment = Alignment.Top) {
+                    // Left Column: Main Actions
+                    Column(horizontalAlignment = Alignment.Start) {
+                        OvalProgressPlayButton(
+                            watchedPercentage = watchedPercentage,
+                            onPlay = onPlay
+                        )
+                        
+                        Spacer(modifier = Modifier.height(12.dp))
+                        
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TVSmallIconButton(
+                                icon = if (isWatched) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
+                                onClick = { onWatchedToggle(!isWatched) },
+                                focusColor = Color(0xFF4CAF50)
+                            )
+                            TVSmallIconButton(
+                                icon = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                                onClick = { onFavoritesToggle(!isFavorite) },
+                                focusColor = Color.Red
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TVSmallIconButton(icon = Icons.Filled.SkipNext, onClick = onNextEpisode)
+                            TVSmallIconButton(icon = Icons.Filled.Refresh, onClick = onRestart)
+                            TVSmallIconButton(
+                                icon = Icons.Filled.Delete, 
+                                onClick = onRemoveFromWatchlist,
+                                focusColor = Color(0xFFFF6B6B)
+                            )
+                        }
+                    }
 
-                // Secondary Actions Grid
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TVSmallIconButton(
-                        icon = if (isWatched) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
-                        onClick = { onWatchedToggle(!isWatched) },
-                        focusColor = Color(0xFF4CAF50)
-                    )
-                    TVSmallIconButton(
-                        icon = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                        onClick = { onFavoritesToggle(!isFavorite) },
-                        focusColor = Color.Red
-                    )
-                    TVSmallIconButton(
-                        icon = Icons.Filled.SkipNext,
-                        onClick = onNextEpisode
-                    )
-                }
+                    Spacer(modifier = Modifier.width(28.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TVSmallIconButton(
-                        icon = Icons.Filled.Refresh,
-                        onClick = onRestart
-                    )
-                    TVSmallIconButton(
-                        icon = Icons.Filled.Delete,
-                        onClick = onRemoveFromWatchlist,
-                        focusColor = Color(0xFFFF6B6B)
-                    )
+                    // Right Column: Info & Summary
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "E${episode.number}: ${episode.name}",
+                            style = TVShadowStyle.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                        )
+                        Text(
+                            text = "Season ${episode.season}  •  ${episode.runtime ?: "N/A"} min",
+                            style = TVShadowStyle.copy(fontSize = 15.sp, color = Color.Gray)
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        val summaryText = episode.summary?.replace("<[^>]*>".toRegex(), "") ?: "No summary available."
+                        Text(
+                            text = summaryText,
+                            style = TVShadowStyle.copy(fontSize = 15.sp, lineHeight = 22.sp),
+                            maxLines = 4,
+                            modifier = Modifier
+                                .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                                .clickable { showFullDescription.value = true }
+                                .padding(12.dp)
+                        )
+                    }
                 }
             }
 
-            // Right Side: Title & Description
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "E${episode.number}: ${episode.name}",
-                    style = TVShadowStyle.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold)
-                )
-                
-                Text(
-                    text = "Season ${episode.season}  •  ${episode.runtime ?: "N/A"} min",
-                    style = TVShadowStyle.copy(fontSize = 14.sp, color = Color.Gray)
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                val summaryText = episode.summary?.replace("<[^>]*>".toRegex(), "") ?: "No summary available."
-                Text(
-                    text = summaryText,
-                    style = TVShadowStyle.copy(fontSize = 15.sp, lineHeight = 22.sp),
-                    maxLines = 5,
-                    modifier = Modifier
-                        .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-                        .clickable { showDescriptionPopup.value = true }
-                        .padding(12.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        // 4. Horizontal Episode List (Matches "EPISODES" row in Series Detail)
-        if (allEpisodesInSeason.isNotEmpty()) {
-            Text(
-                text = "MORE FROM SEASON ${episode.season}",
-                modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp),
-                style = TVShadowStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.Gray)
-            )
-
+            Spacer(modifier = Modifier.height(40.dp))
+            SectionTitle("MORE EPISODES")
+            
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 32.dp),
                 horizontalArrangement = Arrangement.spacedBy(18.dp)
             ) {
                 allEpisodesInSeason.forEach { ep ->
-                    EpisodeImageCard(
-                        episode = ep,
+                    TVEpisodeCardSmall(
+                        episode = ep, 
                         isSelected = ep.id == episode.id,
                         onClick = { onEpisodeSelected(ep) }
                     )
                 }
             }
+            
+            Spacer(modifier = Modifier.height(80.dp))
         }
 
-        Spacer(modifier = Modifier.height(80.dp))
+        // FULL DESCRIPTION POPUP (Exact same as Series Detail)
+        if (showFullDescription.value) {
+            EpisodeDescriptionDialog(
+                title = "E${episode.number}: ${episode.name}",
+                summary = episode.summary ?: "",
+                onDismiss = { showFullDescription.value = false }
+            )
+        }
     }
 }
 
@@ -207,7 +185,7 @@ fun TVSmallIconButton(
         ),
         border = if (!isFocused) BorderStroke(2.dp, Color.White.copy(alpha = 0.1f)) else null
     ) {
-        Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp))
+        Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(22.dp))
     }
 }
 
@@ -222,10 +200,8 @@ fun OvalProgressPlayButton(
     Button(
         onClick = onPlay,
         interactionSource = source,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        shape = RoundedCornerShape(26.dp),
+        modifier = Modifier.width(160.dp).height(52.dp),
+        shape = RoundedCornerShape(8.dp), // Matched Series Detail button shape
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isFocused) Color(0xFF00A36C) else Color.Black.copy(alpha = 0.4f),
             contentColor = if (isFocused) Color.Black else Color.White
@@ -234,51 +210,80 @@ fun OvalProgressPlayButton(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Filled.PlayArrow, null)
-            if (watchedPercentage > 0) {
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("$watchedPercentage%", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(if (watchedPercentage > 0) "$watchedPercentage%" else "Play", fontWeight = FontWeight.Black)
+        }
+    }
+}
+
+@Composable
+fun TVEpisodeCardSmall(episode: TVMazeEpisode, isSelected: Boolean, onClick: () -> Unit) {
+    val source = remember { MutableInteractionSource() }
+    val isFocused by source.collectIsFocusedAsState()
+    Column(modifier = Modifier.width(220.dp).clickable(source, null) { onClick() }) {
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(16f/9f)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.Black.copy(alpha = 0.4f))
+            .border(
+                width = if (isFocused) 4.dp else if (isSelected) 2.dp else 0.dp,
+                color = if (isFocused) Color.White else if (isSelected) Color(0xFF00A36C) else Color.Transparent,
+                shape = RoundedCornerShape(12.dp)
+            )
+        ) {
+            AsyncImage(model = episode.image?.medium, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Text("E${episode.number}: ${episode.name ?: "Untitled"}", style = TVShadowStyle.copy(fontSize = 14.sp), maxLines = 1)
+    }
+}
+
+@Composable
+fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Unit) {
+    var fontSize by remember { mutableStateOf(18.sp) }
+    val dialogScrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.95f)).padding(60.dp)) {
+            Column(modifier = Modifier.fillMaxWidth(0.85f).align(Alignment.Center)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+                    Spacer(modifier = Modifier.weight(1f))
+                    TVFocusButtonSmall("↑") { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 500) } }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TVFocusButtonSmall("↓") { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value + 500) } }
+                    Spacer(modifier = Modifier.width(20.dp))
+                    TVFocusButtonSmall("✕") { onDismiss() }
+                }
+                Spacer(modifier = Modifier.height(30.dp))
+                Column(modifier = Modifier.verticalScroll(dialogScrollState)) {
+                    Text(
+                        text = summary.replace("<[^>]*>".toRegex(), ""), 
+                        style = TVShadowStyle.copy(fontSize = fontSize, lineHeight = (fontSize.value * 1.5).sp)
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
-fun EpisodeImageCard(
-    episode: TVMazeEpisode,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
+fun TVFocusButtonSmall(text: String, onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val isFocused by source.collectIsFocusedAsState()
-
-    Column(modifier = Modifier.width(200.dp).clickable(source, null) { onClick() }) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f/9f)
-                .clip(RoundedCornerShape(12.dp))
-                .background(Color.Black.copy(alpha = 0.4f))
-                .then(
-                    if (isFocused || isSelected) 
-                        Modifier.border(4.dp, if (isSelected) Color(0xFF00A36C) else Color.White, RoundedCornerShape(12.dp)).padding(4.dp) 
-                    else Modifier
-                )
-        ) {
-            AsyncImage(
-                model = episode.image?.medium,
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "E${episode.number}: ${episode.name ?: "Untitled"}",
-            style = TVShadowStyle.copy(
-                fontSize = 14.sp, 
-                fontWeight = if (isFocused) FontWeight.ExtraBold else FontWeight.Medium
-            ),
-            maxLines = 1
-        )
+    Button(
+        onClick = onClick,
+        interactionSource = source,
+        modifier = Modifier.size(48.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isFocused) Color.White else Color.Black.copy(alpha = 0.4f),
+            contentColor = if (isFocused) Color.Black else Color.White
+        ),
+        shape = RoundedCornerShape(8.dp),
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        Text(text, fontWeight = FontWeight.Black, fontSize = 20.sp)
     }
 }
