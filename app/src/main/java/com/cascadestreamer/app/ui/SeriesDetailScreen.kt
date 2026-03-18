@@ -89,7 +89,7 @@ fun SeriesDetailScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        // DYNAMIC BACKDROP
+        // DYNAMIC BACKDROP: Swaps image based on selection
         AsyncImage(
             model = if (selectedEpisode.value != null) {
                 selectedEpisode.value?.image?.original ?: selectedEpisode.value?.image?.medium
@@ -101,10 +101,12 @@ fun SeriesDetailScreen(
             contentScale = ContentScale.Crop
         )
 
-        // MAIN CONTENT
+        // LAYER 1: MAIN CONTENT
         if (selectedEpisode.value == null && selectedCast.value == null) {
             Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
                 TVBackButton(onBack = onBack, label = "Back to Home")
+                
+                // THE 415DP GAP
                 Spacer(modifier = Modifier.fillMaxWidth().height(360.dp))
 
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
@@ -116,13 +118,20 @@ fun SeriesDetailScreen(
                         }
                         Spacer(modifier = Modifier.width(28.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("★ ${series.show.rating?.average ?: "N/A"}  •  ${series.show.premiered?.take(4)}", style = TVShadowStyle.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold))
-                            Spacer(modifier = Modifier.height(10.dp))
                             Text(
-                                text = series.show.summary?.replace("<[^>]*>".toRegex(), "") ?: "",
-                                style = TVShadowStyle.copy(fontSize = 15.sp),
+                                text = "★ ${series.show.rating?.average ?: "N/A"}  •  ${series.show.premiered?.take(4) ?: "N/A"}  •  ${series.show.genres.joinToString(", ")}",
+                                style = TVShadowStyle.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            val summaryText = series.show.summary?.replace("<[^>]*>".toRegex(), "") ?: ""
+                            Text(
+                                text = summaryText,
+                                style = TVShadowStyle.copy(fontSize = 15.sp, lineHeight = 22.sp),
                                 maxLines = 3,
-                                modifier = Modifier.background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp)).padding(12.dp).clickable { showFullDescription.value = true }
+                                modifier = Modifier
+                                    .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                                    .padding(12.dp)
+                                    .clickable { showFullDescription.value = true }
                             )
                         }
                     }
@@ -155,7 +164,7 @@ fun SeriesDetailScreen(
             }
         }
 
-        // OVERLAYS
+        // LAYER 2: EPISODE OVERLAY
         if (selectedEpisode.value != null) {
             EpisodeDetailsTemplate(
                 episode = selectedEpisode.value!!,
@@ -166,17 +175,19 @@ fun SeriesDetailScreen(
             )
         }
 
+        // LAYER 3: ACTOR PROFILE
         if (selectedCast.value != null) {
             ActorWikiProfile(member = selectedCast.value!!, onBack = { selectedCast.value = null })
         }
 
+        // LAYER 4: SUMMARY POPUP
         if (showFullDescription.value) {
             SeriesDescriptionDialog(title = "Summary", summary = series.show.summary ?: "", onDismiss = { showFullDescription.value = false })
         }
     }
 }
 
-// --- HELPER COMPONENTS (The stuff that was missing!) ---
+// --- HELPER COMPONENTS ---
 
 @Composable
 fun TVBackButton(onBack: () -> Unit, label: String) {
@@ -191,14 +202,18 @@ fun TVBackButton(onBack: () -> Unit, label: String) {
 fun TVFocusButton(text: String, onClick: () -> Unit, width: androidx.compose.ui.unit.Dp = 60.dp, isIcon: Boolean = false, focusColor: Color = Color.White) {
     val source = remember { MutableInteractionSource() }
     val isFocused by source.collectIsFocusedAsState()
+    val containerColor = if (isFocused) focusColor else Color.Black.copy(alpha = 0.4f)
+    val textColor = if (isFocused) Color.Black else Color.White
+
     Button(
         onClick = onClick,
         interactionSource = source,
         modifier = Modifier.height(52.dp).then(if (isIcon) Modifier.width(52.dp) else Modifier.width(width)),
-        colors = ButtonDefaults.buttonColors(containerColor = if (isFocused) focusColor else Color.Black.copy(alpha = 0.4f), contentColor = if (isFocused) Color.Black else Color.White),
-        shape = RoundedCornerShape(8.dp)
+        colors = ButtonDefaults.buttonColors(containerColor = containerColor),
+        shape = RoundedCornerShape(8.dp),
+        contentPadding = PaddingValues(0.dp)
     ) {
-        Text(text, fontWeight = FontWeight.Black)
+        Text(text, fontWeight = FontWeight.Black, color = textColor)
     }
 }
 
@@ -211,14 +226,20 @@ fun SectionTitle(text: String) {
 fun TVSeasonSelectButton(season: Int, isSelected: Boolean, onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val isFocused by source.collectIsFocusedAsState()
+    val containerColor = when {
+        isFocused -> Color.White
+        isSelected -> Color(0xFF388E3C)
+        else -> Color.DarkGray
+    }
+    val textColor = if (isFocused) Color.Black else Color.White
+
     Button(
         onClick = onClick,
         interactionSource = source,
-        colors = ButtonDefaults.buttonColors(containerColor = if (isFocused) Color.White else if (isSelected) Color(0xFF388E3C) else Color.DarkGray),
-        contentColor = if (isFocused) Color.Black else Color.White,
+        colors = ButtonDefaults.buttonColors(containerColor = containerColor),
         shape = RoundedCornerShape(8.dp)
     ) {
-        Text("Season $season")
+        Text("Season $season", color = textColor)
     }
 }
 
@@ -240,17 +261,25 @@ fun TVCastCircleCard(member: CastMember, onClick: () -> Unit) {
     val isFocused by source.collectIsFocusedAsState()
     Column(modifier = Modifier.width(120.dp).clickable(source, null) { onClick() }, horizontalAlignment = Alignment.CenterHorizontally) {
         AsyncImage(model = member.imageUrl, contentDescription = null, modifier = Modifier.size(100.dp).clip(CircleShape).border(if (isFocused) 3.dp else 0.dp, Color.White, CircleShape), contentScale = ContentScale.Crop)
-        Text(member.name, style = TVShadowStyle.copy(fontSize = 12.sp), maxLines = 1)
+        Text(member.name, style = TVShadowStyle.copy(fontSize = 12.sp), maxLines = 1, fontWeight = FontWeight.Bold)
     }
 }
 
 @Composable
 fun ActorWikiProfile(member: CastMember, onBack: () -> Unit) {
     BackHandler { onBack() }
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.9f))) {
-        Column {
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.95f))) {
+        Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
             TVBackButton(onBack = onBack, label = "Actor Profile")
-            Text(member.name, style = TVShadowStyle.copy(fontSize = 40.sp), modifier = Modifier.padding(32.dp))
+            Row(modifier = Modifier.padding(40.dp), horizontalArrangement = Arrangement.spacedBy(40.dp)) {
+                AsyncImage(model = member.imageUrl, contentDescription = null, modifier = Modifier.size(300.dp).clip(RoundedCornerShape(16.dp)), contentScale = ContentScale.Crop)
+                Column {
+                    Text(member.name, style = TVShadowStyle.copy(fontSize = 42.sp, fontWeight = FontWeight.Black))
+                    Text("as ${member.character}", style = TVShadowStyle.copy(fontSize = 22.sp, color = Color.Gray))
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text(member.biography ?: "Biography details coming soon.", style = TVShadowStyle.copy(fontSize = 18.sp, lineHeight = 28.sp))
+                }
+            }
         }
     }
 }
@@ -258,10 +287,12 @@ fun ActorWikiProfile(member: CastMember, onBack: () -> Unit) {
 @Composable
 fun SeriesDescriptionDialog(title: String, summary: String, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
-        Box(modifier = Modifier.fillMaxSize().background(Color.Black).padding(32.dp)) {
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.9f)).padding(40.dp)) {
             Column {
-                Text(title, style = TVShadowStyle.copy(fontSize = 24.sp))
-                Text(summary.replace("<[^>]*>".toRegex(), ""), color = Color.White)
+                Text(title, style = TVShadowStyle.copy(fontSize = 28.sp, fontWeight = FontWeight.Bold))
+                Spacer(modifier = Modifier.height(20.dp))
+                Text(summary.replace("<[^>]*>".toRegex(), ""), style = TVShadowStyle.copy(fontSize = 18.sp, lineHeight = 26.sp))
+                Spacer(modifier = Modifier.height(20.dp))
                 TVFocusButton("Close", onDismiss)
             }
         }
