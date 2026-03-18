@@ -31,7 +31,31 @@ import com.cascadestreamer.app.managers.TVMazeShow
 import com.cascadestreamer.app.ui.templates.EpisodeDetailsTemplate
 import kotlinx.coroutines.launch
 
-// ... (Data classes CastMember and SeriesData remain the same)
+// DATA MODELS - DEFINED HERE TO PREVENT COMPILER ERRORS IN APP.KT
+data class CastMember(
+    val id: Int,
+    val name: String,
+    val character: String,
+    val imageUrl: String?,
+    val biography: String? = null
+)
+
+data class SeriesData(
+    val show: TVMazeShow,
+    val episodes: List<TVMazeEpisode> = emptyList(),
+    val cast: List<CastMember> = emptyList(),
+    val backdropUrl: String? = null,
+    val posterUrl: String? = null
+)
+
+val TVShadowStyle = TextStyle(
+    color = Color.White,
+    shadow = Shadow(
+        color = Color.Black.copy(alpha = 0.95f),
+        offset = Offset(3f, 5f),
+        blurRadius = 14f
+    )
+)
 
 @Composable
 fun SeriesDetailScreen(
@@ -72,7 +96,6 @@ fun SeriesDetailScreen(
 
     // EPISODE DETAILS OVERLAY
     if (selectedEpisode.value != null) {
-        // Add BackHandler here too if the hard back button fails on episodes
         BackHandler { selectedEpisode.value = null }
         Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
             TVBackButton(onBack = { selectedEpisode.value = null }, label = "Back to Series")
@@ -103,9 +126,10 @@ fun SeriesDetailScreen(
         )
 
         Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
+            // SCROLL TO TOP ANCHOR
             Spacer(modifier = Modifier.size(1.dp).focusable())
 
-            // THE ADJUSTED GAP (35dp lift from original 450dp)
+            // THE 415DP GAP (Perfected height)
             Spacer(modifier = Modifier.fillMaxWidth().height(415.dp))
 
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
@@ -135,19 +159,153 @@ fun SeriesDetailScreen(
                     }
                 }
             }
-            // ... (Seasons, Episodes, Cast rows)
+
+            Spacer(modifier = Modifier.height(32.dp))
+            SectionTitle("SEASONS")
+            Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 32.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                allSeasons.value.forEach { season ->
+                    TVSeasonSelectButton(season = season, isSelected = selectedSeason.intValue == season, onClick = { selectedSeason.intValue = season })
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+            SectionTitle("EPISODES")
+            Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 32.dp), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
+                episodesInSeason.value.forEach { episode ->
+                    TVEpisodeCard(episode = episode, fallback = series.posterUrl, onClick = { selectedEpisode.value = episode })
+                }
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+            SectionTitle("CAST & CREW")
+            Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 32.dp), horizontalArrangement = Arrangement.spacedBy(28.dp)) {
+                series.cast.forEach { member ->
+                    TVCastCircleCard(member = member, onClick = { selectedCast.value = member })
+                }
+            }
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
-    // ... (Summary Dialog)
+
+    if (showFullDescription.value) {
+        var fontSize by remember { mutableStateOf(18.sp) }
+        val dialogScrollState = rememberScrollState()
+        val coroutineScope = rememberCoroutineScope()
+
+        Dialog(onDismissRequest = { showFullDescription.value = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.95f)).padding(60.dp)) {
+                Column(modifier = Modifier.fillMaxWidth(0.85f).align(Alignment.Center)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("Summary", style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+                        Spacer(modifier = Modifier.weight(1f))
+                        TVFocusButton(text = "↑", onClick = { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 500) } }, isIcon = true)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TVFocusButton(text = "↓", onClick = { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value + 500) } }, isIcon = true)
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Text("Size: ", color = Color.Gray, fontSize = 14.sp)
+                        TVFocusButton(text = "—", onClick = { if (fontSize.value > 12) fontSize = (fontSize.value - 2).sp }, isIcon = true)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TVFocusButton(text = "+", onClick = { if (fontSize.value < 40) fontSize = (fontSize.value + 2).sp }, isIcon = true)
+                        Spacer(modifier = Modifier.width(20.dp))
+                        TVFocusButton(text = "✕", onClick = { showFullDescription.value = false }, isIcon = true)
+                    }
+                    Spacer(modifier = Modifier.height(30.dp))
+                    Column(modifier = Modifier.verticalScroll(dialogScrollState)) {
+                        Text(text = series.show.summary?.replace("<[^>]*>".toRegex(), "") ?: "", style = TVShadowStyle.copy(fontSize = fontSize, lineHeight = (fontSize.value * 1.5).sp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+// HELPERS
+@Composable
+fun SectionTitle(text: String) {
+    Text(text = text, modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp), style = TVShadowStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.Gray))
+}
+
+@Composable
+fun TVBackButton(onBack: () -> Unit, label: String) {
+    Row(modifier = Modifier.padding(24.dp).clickable { onBack() }, verticalAlignment = Alignment.CenterVertically) {
+        Icon(Icons.Default.ArrowBack, null, tint = Color.White)
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(label, style = TVShadowStyle.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold))
+    }
+}
+
+@Composable
+fun TVFocusButton(text: String, onClick: () -> Unit, width: androidx.compose.ui.unit.Dp = 60.dp, isIcon: Boolean = false, focusColor: Color = Color.White) {
+    val source = remember { MutableInteractionSource() }
+    val isFocused by source.collectIsFocusedAsState()
+    Button(
+        onClick = onClick,
+        interactionSource = source,
+        modifier = Modifier.height(if (isIcon) 48.dp else 52.dp).then(if (isIcon) Modifier.width(48.dp) else Modifier.width(width)),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isFocused) focusColor else Color.Black.copy(alpha = 0.4f),
+            contentColor = if (isFocused) Color.Black else Color.White
+        ),
+        shape = RoundedCornerShape(8.dp),
+        contentPadding = PaddingValues(0.dp),
+        border = if (!isFocused) BorderStroke(2.dp, Color.White.copy(alpha = 0.2f)) else null
+    ) {
+        Text(text, fontWeight = FontWeight.Black, fontSize = if (isIcon) 20.sp else 16.sp)
+    }
+}
+
+@Composable
+fun TVSeasonSelectButton(season: Int, isSelected: Boolean, onClick: () -> Unit) {
+    val source = remember { MutableInteractionSource() }
+    val isFocused by source.collectIsFocusedAsState()
+    Button(
+        onClick = onClick,
+        interactionSource = source,
+        colors = ButtonDefaults.buttonColors(
+            containerColor = when { 
+                isFocused -> Color.White 
+                isSelected -> Color(0xFF388E3C) 
+                else -> Color.Black.copy(alpha = 0.4f) 
+            }, 
+            contentColor = if (isFocused) Color.Black else Color.White
+        ),
+        shape = RoundedCornerShape(8.dp),
+        border = if (!isFocused && !isSelected) BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)) else null
+    ) {
+        Text("Season $season", fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+fun TVEpisodeCard(episode: TVMazeEpisode, fallback: String?, onClick: () -> Unit) {
+    val source = remember { MutableInteractionSource() }
+    val isFocused by source.collectIsFocusedAsState()
+    Column(modifier = Modifier.width(280.dp).clickable(source, null) { onClick() }) {
+        Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f/9f).clip(RoundedCornerShape(12.dp)).background(Color(0xFF151515)).then(if (isFocused) Modifier.border(4.dp, Color.White, RoundedCornerShape(12.dp)).padding(4.dp) else Modifier)) {
+            AsyncImage(model = episode.image?.medium ?: fallback, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Text("E${episode.number}: ${episode.name ?: "Untitled"}", style = TVShadowStyle.copy(fontSize = 15.sp, fontWeight = if (isFocused) FontWeight.ExtraBold else FontWeight.Medium), maxLines = 1)
+    }
+}
+
+@Composable
+fun TVCastCircleCard(member: CastMember, onClick: () -> Unit) {
+    val source = remember { MutableInteractionSource() }
+    val isFocused by source.collectIsFocusedAsState()
+    Column(modifier = Modifier.width(130.dp).clickable(source, null) { onClick() }, horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(modifier = Modifier.size(110.dp).clip(CircleShape).background(if (isFocused) Color.White else Color(0xFF151515)).then(if (isFocused) Modifier.padding(5.dp).clip(CircleShape) else Modifier)) {
+            AsyncImage(model = member.imageUrl, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(member.name, style = TVShadowStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+        Text(member.character, style = TVShadowStyle.copy(fontSize = 12.sp, color = Color.Gray), maxLines = 1)
+    }
 }
 
 @Composable
 fun ActorWikiProfile(member: CastMember, onBack: () -> Unit) {
-    // FIX: Intercepts the physical "Back" button on the remote/phone
-    BackHandler(enabled = true) {
-        onBack()
-    }
-
+    BackHandler(enabled = true) { onBack() }
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             TVBackButton(onBack = onBack, label = "Actor Profile")
@@ -163,5 +321,3 @@ fun ActorWikiProfile(member: CastMember, onBack: () -> Unit) {
         }
     }
 }
-
-// ... (Rest of helpers: TVFocusButton, TVSeasonSelectButton, etc., all using alpha 0.4f)
