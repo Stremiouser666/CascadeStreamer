@@ -30,7 +30,7 @@ import com.cascadestreamer.app.managers.TVMazeShow
 import com.cascadestreamer.app.ui.templates.EpisodeDetailsTemplate
 import kotlinx.coroutines.launch
 
-// DEFINING MISSING REFERENCES TO FIX COMPILATION ERRORS
+// DATA MODELS (Included to prevent "Unresolved reference" errors)
 data class CastMember(
     val id: Int,
     val name: String,
@@ -125,8 +125,9 @@ fun SeriesDetailScreen(
             // SCROLL TO TOP ANCHOR
             Spacer(modifier = Modifier.size(1.dp).focusable())
 
-            // THE 450DP GAP
-            Spacer(modifier = Modifier.fillMaxWidth().height(450.dp))
+            // ADJUSTED GAP: Changed from 450dp to 415dp. 
+            // This is a subtle ~35dp lift to keep the CBS logo and button borders on screen.
+            Spacer(modifier = Modifier.fillMaxWidth().height(415.dp))
 
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
                 Row(verticalAlignment = Alignment.Top) {
@@ -215,7 +216,7 @@ fun SeriesDetailScreen(
     }
 }
 
-// HELPER COMPONENTS
+// HELPERS
 @Composable
 fun SectionTitle(text: String) {
     Text(text = text, modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp), style = TVShadowStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.Gray))
@@ -239,7 +240,8 @@ fun TVFocusButton(text: String, onClick: () -> Unit, width: androidx.compose.ui.
         interactionSource = source,
         modifier = Modifier.height(if (isIcon) 48.dp else 52.dp).then(if (isIcon) Modifier.width(48.dp) else Modifier.width(width)),
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isFocused) focusColor else Color.Black.copy(alpha = 0.15f),
+            // UPDATED: 40% Black transparency to match the details box
+            containerColor = if (isFocused) focusColor else Color.Black.copy(alpha = 0.4f),
             contentColor = if (isFocused) Color.Black else Color.White
         ),
         shape = RoundedCornerShape(8.dp),
@@ -258,10 +260,11 @@ fun TVSeasonSelectButton(season: Int, isSelected: Boolean, onClick: () -> Unit) 
         onClick = onClick,
         interactionSource = source,
         colors = ButtonDefaults.buttonColors(
+            // UPDATED: 40% Black transparency
             containerColor = when { 
                 isFocused -> Color.White 
                 isSelected -> Color(0xFF388E3C) 
-                else -> Color.Black.copy(alpha = 0.15f) 
+                else -> Color.Black.copy(alpha = 0.4f) 
             }, 
             contentColor = if (isFocused) Color.Black else Color.White
         ),
