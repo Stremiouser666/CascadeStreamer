@@ -50,27 +50,27 @@ fun EpisodeDetailsTemplate(
     val showFullDescription = remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
-    // Fixed: Hardware back button now triggers the onBack callback
+    // CAPTURE HARD BACK BUTTON
     BackHandler(enabled = true) { onBack() }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f))) {
+    // Use a semi-transparent box to let the series backdrop show through slightly
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f))) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
         ) {
-            // Match the Series Detail header style
+            // Header - Clean single back button
             TVBackButton(onBack = onBack, label = "Back to Series")
 
-            // The 415dp gap doesn't apply here because we want the episode content 
-            // but we add a large top spacer to keep the "airy" feel
+            // Top Spacer to align with your "airy" series layout
             Spacer(modifier = Modifier.height(60.dp))
 
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
                 Row(verticalAlignment = Alignment.Top) {
-                    // Left Column: Main Actions
+                    // Left: Action Column
                     Column(horizontalAlignment = Alignment.Start) {
-                        OvalProgressPlayButton(
+                        TVEpisodePlayButton(
                             watchedPercentage = watchedPercentage,
                             onPlay = onPlay
                         )
@@ -105,7 +105,7 @@ fun EpisodeDetailsTemplate(
 
                     Spacer(modifier = Modifier.width(28.dp))
 
-                    // Right Column: Info & Summary
+                    // Right: Episode Info & Description
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "E${episode.number}: ${episode.name}",
@@ -118,7 +118,8 @@ fun EpisodeDetailsTemplate(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        val summaryText = episode.summary?.replace("<[^>]*>".toRegex(), "") ?: "No summary available."
+                        // Summary box with 0.4f transparency
+                        val summaryText = episode.summary?.replace("<[^>]*>".toRegex(), "") ?: "No summary."
                         Text(
                             text = summaryText,
                             style = TVShadowStyle.copy(fontSize = 15.sp, lineHeight = 22.sp),
@@ -153,7 +154,7 @@ fun EpisodeDetailsTemplate(
             Spacer(modifier = Modifier.height(80.dp))
         }
 
-        // FULL DESCRIPTION POPUP (Exact same as Series Detail)
+        // POPUP WITH + / - TEXT RESIZING
         if (showFullDescription.value) {
             EpisodeDescriptionDialog(
                 title = "E${episode.number}: ${episode.name}",
@@ -165,35 +166,7 @@ fun EpisodeDetailsTemplate(
 }
 
 @Composable
-fun TVSmallIconButton(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit,
-    focusColor: Color = Color.White
-) {
-    val source = remember { MutableInteractionSource() }
-    val isFocused by source.collectIsFocusedAsState()
-
-    Button(
-        onClick = onClick,
-        interactionSource = source,
-        modifier = Modifier.size(48.dp),
-        shape = RoundedCornerShape(8.dp),
-        contentPadding = PaddingValues(0.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = if (isFocused) focusColor else Color.Black.copy(alpha = 0.4f),
-            contentColor = if (isFocused) Color.Black else Color.White
-        ),
-        border = if (!isFocused) BorderStroke(2.dp, Color.White.copy(alpha = 0.1f)) else null
-    ) {
-        Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(22.dp))
-    }
-}
-
-@Composable
-fun OvalProgressPlayButton(
-    watchedPercentage: Int,
-    onPlay: () -> Unit
-) {
+fun TVEpisodePlayButton(watchedPercentage: Int, onPlay: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val isFocused by source.collectIsFocusedAsState()
 
@@ -201,7 +174,7 @@ fun OvalProgressPlayButton(
         onClick = onPlay,
         interactionSource = source,
         modifier = Modifier.width(160.dp).height(52.dp),
-        shape = RoundedCornerShape(8.dp), // Matched Series Detail button shape
+        shape = RoundedCornerShape(8.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = if (isFocused) Color(0xFF00A36C) else Color.Black.copy(alpha = 0.4f),
             contentColor = if (isFocused) Color.Black else Color.White
@@ -251,11 +224,17 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
                     Spacer(modifier = Modifier.weight(1f))
-                    TVFocusButtonSmall("↑") { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 500) } }
+                    // Text Size and Scroll Controls
+                    TVDialogButton("↑") { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 500) } }
                     Spacer(modifier = Modifier.width(8.dp))
-                    TVFocusButtonSmall("↓") { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value + 500) } }
+                    TVDialogButton("↓") { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value + 500) } }
                     Spacer(modifier = Modifier.width(20.dp))
-                    TVFocusButtonSmall("✕") { onDismiss() }
+                    Text("Size: ", color = Color.Gray, fontSize = 14.sp)
+                    TVDialogButton("—") { if (fontSize.value > 12) fontSize = (fontSize.value - 2).sp }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TVDialogButton("+") { if (fontSize.value < 40) fontSize = (fontSize.value + 2).sp }
+                    Spacer(modifier = Modifier.width(20.dp))
+                    TVDialogButton("✕") { onDismiss() }
                 }
                 Spacer(modifier = Modifier.height(30.dp))
                 Column(modifier = Modifier.verticalScroll(dialogScrollState)) {
@@ -270,7 +249,7 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
 }
 
 @Composable
-fun TVFocusButtonSmall(text: String, onClick: () -> Unit) {
+fun TVDialogButton(text: String, onClick: () -> Unit) {
     val source = remember { MutableInteractionSource() }
     val isFocused by source.collectIsFocusedAsState()
     Button(
