@@ -50,25 +50,23 @@ fun EpisodeDetailsTemplate(
     val showFullDescription = remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
-    // CAPTURE HARD BACK BUTTON
+    // 1. CAPTURE HARD BACK BUTTON: Returns to Series Detail
     BackHandler(enabled = true) { onBack() }
 
-    // Use a semi-transparent box to let the series backdrop show through slightly
     Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.5f))) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(scrollState)
         ) {
-            // Header - Clean single back button
+            // Clean Header
             TVBackButton(onBack = onBack, label = "Back to Series")
 
-            // Top Spacer to align with your "airy" series layout
             Spacer(modifier = Modifier.height(60.dp))
 
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
                 Row(verticalAlignment = Alignment.Top) {
-                    // Left: Action Column
+                    // Left Column: Actions
                     Column(horizontalAlignment = Alignment.Start) {
                         TVEpisodePlayButton(
                             watchedPercentage = watchedPercentage,
@@ -105,7 +103,7 @@ fun EpisodeDetailsTemplate(
 
                     Spacer(modifier = Modifier.width(28.dp))
 
-                    // Right: Episode Info & Description
+                    // Right Column: Info
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "E${episode.number}: ${episode.name}",
@@ -118,7 +116,6 @@ fun EpisodeDetailsTemplate(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Summary box with 0.4f transparency
                         val summaryText = episode.summary?.replace("<[^>]*>".toRegex(), "") ?: "No summary."
                         Text(
                             text = summaryText,
@@ -154,7 +151,7 @@ fun EpisodeDetailsTemplate(
             Spacer(modifier = Modifier.height(80.dp))
         }
 
-        // POPUP WITH + / - TEXT RESIZING
+        // 2. FULL POPUP: With + and - Text Controls
         if (showFullDescription.value) {
             EpisodeDescriptionDialog(
                 title = "E${episode.number}: ${episode.name}",
@@ -162,6 +159,33 @@ fun EpisodeDetailsTemplate(
                 onDismiss = { showFullDescription.value = false }
             )
         }
+    }
+}
+
+// --- HELPER COMPONENTS (Missing in previous version) ---
+
+@Composable
+fun TVSmallIconButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    focusColor: Color = Color.White
+) {
+    val source = remember { MutableInteractionSource() }
+    val isFocused by source.collectIsFocusedAsState()
+
+    Button(
+        onClick = onClick,
+        interactionSource = source,
+        modifier = Modifier.size(48.dp),
+        shape = RoundedCornerShape(8.dp),
+        contentPadding = PaddingValues(0.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isFocused) focusColor else Color.Black.copy(alpha = 0.4f),
+            contentColor = if (isFocused) Color.Black else Color.White
+        ),
+        border = if (!isFocused) BorderStroke(2.dp, Color.White.copy(alpha = 0.1f)) else null
+    ) {
+        Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(22.dp))
     }
 }
 
@@ -224,12 +248,10 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
                     Spacer(modifier = Modifier.weight(1f))
-                    // Text Size and Scroll Controls
                     TVDialogButton("↑") { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 500) } }
                     Spacer(modifier = Modifier.width(8.dp))
                     TVDialogButton("↓") { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value + 500) } }
                     Spacer(modifier = Modifier.width(20.dp))
-                    Text("Size: ", color = Color.Gray, fontSize = 14.sp)
                     TVDialogButton("—") { if (fontSize.value > 12) fontSize = (fontSize.value - 2).sp }
                     Spacer(modifier = Modifier.width(8.dp))
                     TVDialogButton("+") { if (fontSize.value < 40) fontSize = (fontSize.value + 2).sp }
