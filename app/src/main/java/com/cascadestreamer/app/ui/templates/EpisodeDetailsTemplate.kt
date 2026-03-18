@@ -1,42 +1,32 @@
 package com.cascadestreamer.app.ui.templates
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.*
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.cascadestreamer.app.managers.TVMazeEpisode
-import com.cascadestreamer.app.ui.DescriptionPopup
-import com.cascadestreamer.app.ui.components.ImageFullscreenViewer
+import com.cascadestreamer.app.ui.TVBackButton
+import com.cascadestreamer.app.ui.TVShadowStyle
+import com.cascadestreamer.app.ui.TVFocusButton // Using the one defined in SeriesDetail
 
 @Composable
 fun EpisodeDetailsTemplate(
@@ -49,315 +39,205 @@ fun EpisodeDetailsTemplate(
     onRemoveFromWatchlist: () -> Unit = {},
     onNextEpisode: () -> Unit = {},
     onEpisodeSelected: (TVMazeEpisode) -> Unit = {},
+    onBack: () -> Unit = {},
     isWatched: Boolean = false,
     isFavorite: Boolean = false,
     watchedPercentage: Int = 0
 ) {
     val showDescriptionPopup = remember { mutableStateOf(false) }
-    val showImageFullscreen = remember { mutableStateOf(false) }
-    
+    val scrollState = rememberScrollState()
+
+    // Match hardware back behavior
+    BackHandler { onBack() }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
     ) {
-        // Full width episode image
-        episode.image?.medium?.let {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(250.dp)
-                    .background(Color.DarkGray)
-                    .clickable { showImageFullscreen.value = true }
-            ) {
-                AsyncImage(
-                    model = it,
-                    contentDescription = episode.name,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-                
-                Text(
-                    "Tap for fullscreen",
-                    fontSize = 10.sp,
-                    color = Color.Gray.copy(alpha = 0.7f),
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(8.dp)
-                )
-            }
+        // 1. Back Button at the top
+        TVBackButton(onBack = onBack, label = "Back to Series")
+
+        // 2. Main Episode Image (Hero Section)
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(300.dp)
+                .padding(horizontal = 32.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.Black.copy(alpha = 0.4f))
+        ) {
+            AsyncImage(
+                model = episode.image?.original ?: episode.image?.medium,
+                contentDescription = episode.name,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
         }
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        // Controls + Description row
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // 3. Info & Controls Row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(horizontal = 32.dp),
+            horizontalArrangement = Arrangement.spacedBy(28.dp),
+            verticalAlignment = Alignment.Top
         ) {
-            // Controls column (1/3)
+            // Left Side: Stacked Controls
             Column(
-                modifier = Modifier
-                    .weight(1f),
+                modifier = Modifier.width(160.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Play + Watched button
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OvalProgressPlayButton(
-                        watchedPercentage = watchedPercentage,
-                        onPlay = onPlay,
-                        modifier = Modifier.weight(1f)
-                    )
-                    
-                    val watchedSource = remember { MutableInteractionSource() }
-                    val watchedFocused by watchedSource.collectIsFocusedAsState()
-                    
-                    IconButton(
+                // Play with Progress
+                OvalProgressPlayButton(
+                    watchedPercentage = watchedPercentage,
+                    onPlay = onPlay
+                )
+
+                // Secondary Actions Grid
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TVSmallIconButton(
+                        icon = if (isWatched) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
                         onClick = { onWatchedToggle(!isWatched) },
-                        interactionSource = watchedSource,
-                        modifier = Modifier
-                            .size(48.dp)
-                            .background(
-                                if (watchedFocused) Color(0xFF4CAF50) else Color.DarkGray,
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-                            )
-                    ) {
-                        Icon(
-                            imageVector = if (isWatched) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
-                            contentDescription = if (isWatched) "Mark unwatched" else "Mark watched",
-                            tint = Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-                
-                // Favorites + Next
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val favSource = remember { MutableInteractionSource() }
-                    val favFocused by favSource.collectIsFocusedAsState()
-                    
-                    IconButton(
+                        focusColor = Color(0xFF4CAF50)
+                    )
+                    TVSmallIconButton(
+                        icon = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                         onClick = { onFavoritesToggle(!isFavorite) },
-                        interactionSource = favSource,
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(
-                                if (favFocused) Color.Red else Color.DarkGray,
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-                            )
-                    ) {
-                        Icon(
-                            imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                            contentDescription = if (isFavorite) "Remove favorite" else "Add favorite",
-                            tint = Color.White
-                        )
-                    }
-                    
-                    val nextSource = remember { MutableInteractionSource() }
-                    val nextFocused by nextSource.collectIsFocusedAsState()
-                    
-                    IconButton(
-                        onClick = onNextEpisode,
-                        interactionSource = nextSource,
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(
-                                if (nextFocused) Color(0xFF2196F3) else Color.DarkGray,
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-                            )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.SkipNext,
-                            contentDescription = "Next episode",
-                            tint = Color.White
-                        )
-                    }
+                        focusColor = Color.Red
+                    )
+                    TVSmallIconButton(
+                        icon = Icons.Filled.SkipNext,
+                        onClick = onNextEpisode
+                    )
                 }
-                
-                // Restart + Remove
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    val restartSource = remember { MutableInteractionSource() }
-                    val restartFocused by restartSource.collectIsFocusedAsState()
-                    
-                    IconButton(
-                        onClick = onRestart,
-                        interactionSource = restartSource,
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(
-                                if (restartFocused) Color(0xFF2196F3) else Color.DarkGray,
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-                            )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Restart episode",
-                            tint = Color.White
-                        )
-                    }
-                    
-                    val removeSource = remember { MutableInteractionSource() }
-                    val removeFocused by removeSource.collectIsFocusedAsState()
-                    
-                    IconButton(
+
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TVSmallIconButton(
+                        icon = Icons.Filled.Refresh,
+                        onClick = onRestart
+                    )
+                    TVSmallIconButton(
+                        icon = Icons.Filled.Delete,
                         onClick = onRemoveFromWatchlist,
-                        interactionSource = removeSource,
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(
-                                if (removeFocused) Color(0xFFFF6B6B) else Color.DarkGray,
-                                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
-                            )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Delete,
-                            contentDescription = "Remove from watchlist",
-                            tint = Color.White
-                        )
-                    }
+                        focusColor = Color(0xFFFF6B6B)
+                    )
                 }
             }
-            
-            // Description (2/3)
-            Column(
-                modifier = Modifier
-                    .weight(2f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
+
+            // Right Side: Title & Description
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "E${episode.number}: ${episode.name}",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    text = "E${episode.number}: ${episode.name}",
+                    style = TVShadowStyle.copy(fontSize = 19.sp, fontWeight = FontWeight.Bold)
                 )
                 
                 Text(
-                    "Season ${episode.season} • ${episode.runtime ?: 0} min",
-                    fontSize = 12.sp,
-                    color = Color.Gray
+                    text = "Season ${episode.season}  •  ${episode.runtime ?: "N/A"} min",
+                    style = TVShadowStyle.copy(fontSize = 14.sp, color = Color.Gray)
                 )
-                
-                episode.summary?.let {
-                    Text(
-                        it.replace("<[^>]*>".toRegex(), ""),
-                        fontSize = 12.sp,
-                        color = Color.LightGray,
-                        maxLines = 5,
-                        modifier = Modifier.clickable { showDescriptionPopup.value = true }
-                    )
-                    Text(
-                        "Tap to expand ↕️",
-                        fontSize = 10.sp,
-                        color = Color.Gray,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                val summaryText = episode.summary?.replace("<[^>]*>".toRegex(), "") ?: "No summary available."
+                Text(
+                    text = summaryText,
+                    style = TVShadowStyle.copy(fontSize = 15.sp, lineHeight = 22.sp),
+                    maxLines = 5,
+                    modifier = Modifier
+                        .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                        .clickable { showDescriptionPopup.value = true }
+                        .padding(12.dp)
+                )
             }
         }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Episode list - horizontal scroll of pictures
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        // 4. Horizontal Episode List (Matches "EPISODES" row in Series Detail)
         if (allEpisodesInSeason.isNotEmpty()) {
             Text(
-                "Season ${episode.season}",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                text = "MORE FROM SEASON ${episode.season}",
+                modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp),
+                style = TVShadowStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.Gray)
             )
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(horizontal = 32.dp),
+                horizontalArrangement = Arrangement.spacedBy(18.dp)
             ) {
                 allEpisodesInSeason.forEach { ep ->
                     EpisodeImageCard(
                         episode = ep,
+                        isSelected = ep.id == episode.id,
                         onClick = { onEpisodeSelected(ep) }
                     )
                 }
             }
         }
-        
-        Spacer(modifier = Modifier.height(32.dp))
+
+        Spacer(modifier = Modifier.height(80.dp))
     }
-    
-    if (showDescriptionPopup.value) {
-        DescriptionPopup(
-            description = episode.summary ?: "",
-            title = "E${episode.number}: ${episode.name}",
-            onDismiss = { showDescriptionPopup.value = false }
-        )
-    }
-    
-    if (showImageFullscreen.value) {
-        ImageFullscreenViewer(
-            imageUrl = episode.image?.medium,
-            onDismiss = { showImageFullscreen.value = false }
-        )
+}
+
+@Composable
+fun TVSmallIconButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    focusColor: Color = Color.White
+) {
+    val source = remember { MutableInteractionSource() }
+    val isFocused by source.collectIsFocusedAsState()
+
+    Button(
+        onClick = onClick,
+        interactionSource = source,
+        modifier = Modifier.size(48.dp),
+        shape = RoundedCornerShape(8.dp),
+        contentPadding = PaddingValues(0.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isFocused) focusColor else Color.Black.copy(alpha = 0.4f),
+            contentColor = if (isFocused) Color.Black else Color.White
+        ),
+        border = if (!isFocused) BorderStroke(2.dp, Color.White.copy(alpha = 0.1f)) else null
+    ) {
+        Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(24.dp))
     }
 }
 
 @Composable
 fun OvalProgressPlayButton(
-    watchedPercentage: Int = 0,
-    onPlay: () -> Unit = {},
-    modifier: Modifier = Modifier
+    watchedPercentage: Int,
+    onPlay: () -> Unit
 ) {
     val source = remember { MutableInteractionSource() }
     val isFocused by source.collectIsFocusedAsState()
-    
-    Box(
-        modifier = modifier
-            .height(48.dp)
-            .background(
-                if (isFocused) Color(0xFF4CAF50) else Color.DarkGray,
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp)
-            )
-            .clickable(interactionSource = source, indication = null) { onPlay() }
-            .drawBehind {
-                val progressWidth = (this.size.width * watchedPercentage / 100f).coerceIn(0f, this.size.width)
-                drawRect(
-                    color = Color(0xFF2E7D32).copy(alpha = 0.7f),
-                    size = androidx.compose.ui.geometry.Size(progressWidth, this.size.height)
-                )
-            },
-        contentAlignment = Alignment.Center
+
+    Button(
+        onClick = onPlay,
+        interactionSource = source,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp),
+        shape = RoundedCornerShape(26.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isFocused) Color(0xFF00A36C) else Color.Black.copy(alpha = 0.4f),
+            contentColor = if (isFocused) Color.Black else Color.White
+        ),
+        border = if (!isFocused) BorderStroke(2.dp, Color.White.copy(alpha = 0.2f)) else null
     ) {
-        Icon(
-            imageVector = Icons.Filled.PlayArrow,
-            contentDescription = "Play",
-            tint = Color.White,
-            modifier = Modifier.size(24.dp)
-        )
-        
-        if (watchedPercentage > 0) {
-            Text(
-                "$watchedPercentage%",
-                fontSize = 10.sp,
-                color = Color.White,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 8.dp, bottom = 4.dp)
-            )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.PlayArrow, null)
+            if (watchedPercentage > 0) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("$watchedPercentage%", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
 }
@@ -365,59 +245,40 @@ fun OvalProgressPlayButton(
 @Composable
 fun EpisodeImageCard(
     episode: TVMazeEpisode,
+    isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .width(120.dp)
-            .height(160.dp)
-            .background(Color.DarkGray)
-            .clickable { onClick() },
-        contentAlignment = Alignment.Center
-    ) {
-        // Try episode image first
-        if (episode.image?.medium != null) {
+    val source = remember { MutableInteractionSource() }
+    val isFocused by source.collectIsFocusedAsState()
+
+    Column(modifier = Modifier.width(200.dp).clickable(source, null) { onClick() }) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f/9f)
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color.Black.copy(alpha = 0.4f))
+                .then(
+                    if (isFocused || isSelected) 
+                        Modifier.border(4.dp, if (isSelected) Color(0xFF00A36C) else Color.White, RoundedCornerShape(12.dp)).padding(4.dp) 
+                    else Modifier
+                )
+        ) {
             AsyncImage(
-                model = episode.image.medium,
-                contentDescription = "E${episode.number}",
+                model = episode.image?.medium,
+                contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
-            
-            Text(
-                "E${episode.number}",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(4.dp)
-                    .background(Color.Black.copy(alpha = 0.7f), shape = androidx.compose.foundation.shape.RoundedCornerShape(3.dp))
-                    .padding(2.dp)
-            )
-        } else {
-            // Fallback to text
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    "E${episode.number}",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                
-                Text(
-                    episode.name ?: "Unknown",
-                    fontSize = 10.sp,
-                    color = Color.LightGray,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
         }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "E${episode.number}: ${episode.name ?: "Untitled"}",
+            style = TVShadowStyle.copy(
+                fontSize = 14.sp, 
+                fontWeight = if (isFocused) FontWeight.ExtraBold else FontWeight.Medium
+            ),
+            maxLines = 1
+        )
     }
 }
