@@ -106,7 +106,7 @@ fun SeriesDetailScreen(
         if (selectedEpisode.value == null && selectedCast.value == null) {
             Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
                 TVBackButton(onBack = onBack, label = "Back to Home")
-                
+
                 // Cinematic Vertical Spacing
                 Spacer(modifier = Modifier.fillMaxWidth().height(360.dp))
 
@@ -153,8 +153,8 @@ fun SeriesDetailScreen(
                         TVEpisodeCard(
                             episode = episode, 
                             fallback = series.posterUrl,
-                            isWatched = false, // Connect to your database state here
-                            watchedPercentage = 0, // Connect to your progress state here
+                            isWatched = false, 
+                            watchedPercentage = 0, 
                             onClick = { selectedEpisode.value = episode }
                         )
                     }
@@ -187,9 +187,13 @@ fun SeriesDetailScreen(
             ActorWikiProfile(member = selectedCast.value!!, onBack = { selectedCast.value = null })
         }
 
-        // LAYER 4: SUMMARY POPUP
+        // LAYER 4: SUMMARY POPUP (FIXED CONTROLS)
         if (showFullDescription.value) {
-            SeriesDescriptionDialog(title = "Summary", summary = series.show.summary ?: "", onDismiss = { showFullDescription.value = false })
+            SeriesDescriptionDialog(
+                title = "Summary", 
+                summary = series.show.summary ?: "", 
+                onDismiss = { showFullDescription.value = false }
+            )
         }
     }
 }
@@ -260,7 +264,7 @@ fun TVEpisodeCard(
 ) {
     val source = remember { MutableInteractionSource() }
     val isFocused by source.collectIsFocusedAsState()
-    
+
     Column(modifier = Modifier.width(280.dp).clickable(source, null) { onClick() }) {
         Box(
             modifier = Modifier
@@ -270,15 +274,13 @@ fun TVEpisodeCard(
                 .border(if (isFocused) 4.dp else 0.dp, Color.White, RoundedCornerShape(12.dp))
         ) {
             AsyncImage(model = episode.image?.medium ?: fallback, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-            
-            // Progress Bar
+
             if (watchedPercentage > 0) {
                 Box(modifier = Modifier.fillMaxWidth().height(6.dp).align(Alignment.BottomCenter).background(Color.Black.copy(alpha = 0.5f))) {
                     Box(modifier = Modifier.fillMaxWidth(watchedPercentage / 100f).fillMaxHeight().background(Color(0xFF4CAF50)))
                 }
             }
 
-            // Watched Icon
             if (isWatched) {
                 Box(modifier = Modifier.padding(8.dp).size(28.dp).background(Color.Black.copy(alpha = 0.7f), CircleShape).align(Alignment.TopEnd), contentAlignment = Alignment.Center) {
                     Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(22.dp))
@@ -318,16 +320,57 @@ fun ActorWikiProfile(member: CastMember, onBack: () -> Unit) {
     }
 }
 
+// --- POPUP DIALOG WITH RESTORED CONTROLS ---
 @Composable
 fun SeriesDescriptionDialog(title: String, summary: String, onDismiss: () -> Unit) {
-    Dialog(onDismissRequest = onDismiss) {
-        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.9f)).padding(40.dp)) {
-            Column {
-                Text(title, style = TVShadowStyle.copy(fontSize = 28.sp, fontWeight = FontWeight.Bold))
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(summary.replace("<[^>]*>".toRegex(), ""), style = TVShadowStyle.copy(fontSize = 18.sp, lineHeight = 26.sp))
-                Spacer(modifier = Modifier.height(20.dp))
-                TVFocusButton("Close", onDismiss)
+    var fontSize by remember { mutableStateOf(18.sp) }
+    val dialogScrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+
+    Dialog(
+        onDismissRequest = onDismiss, 
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.96f))
+                .padding(60.dp)
+        ) {
+            Column(modifier = Modifier.fillMaxWidth(0.9f).align(Alignment.Center)) {
+                
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Black))
+                    
+                    Spacer(modifier = Modifier.weight(1f))
+                    
+                    // Scroll Up/Down
+                    TVFocusButton("↑", { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 600) } }, isIcon = true)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TVFocusButton("↓", { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value + 600) } }, isIcon = true)
+                    
+                    Spacer(modifier = Modifier.width(24.dp))
+                    
+                    // Font Size - / +
+                    Text("Size: ", color = Color.Gray, fontSize = 14.sp)
+                    TVFocusButton("—", { if (fontSize.value > 12) fontSize = (fontSize.value - 2).sp }, isIcon = true)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TVFocusButton("+", { if (fontSize.value < 44) fontSize = (fontSize.value + 2).sp }, isIcon = true)
+                    
+                    Spacer(modifier = Modifier.width(24.dp))
+                    
+                    // Close
+                    TVFocusButton("✕", onDismiss, isIcon = true, focusColor = Color.Red)
+                }
+
+                Spacer(modifier = Modifier.height(30.dp))
+
+                Box(modifier = Modifier.weight(1f).verticalScroll(dialogScrollState)) {
+                    Text(
+                        text = summary.replace("<[^>]*>".toRegex(), ""), 
+                        style = TVShadowStyle.copy(fontSize = fontSize, lineHeight = (fontSize.value * 1.6).sp)
+                    )
+                }
             }
         }
     }
