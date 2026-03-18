@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -89,7 +90,7 @@ fun SeriesDetailScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        // DYNAMIC BACKDROP: Swaps image based on selection
+        // DYNAMIC BACKDROP
         AsyncImage(
             model = if (selectedEpisode.value != null) {
                 selectedEpisode.value?.image?.original ?: selectedEpisode.value?.image?.medium
@@ -106,7 +107,7 @@ fun SeriesDetailScreen(
             Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
                 TVBackButton(onBack = onBack, label = "Back to Home")
                 
-                // THE 415DP GAP
+                // Cinematic Vertical Spacing
                 Spacer(modifier = Modifier.fillMaxWidth().height(360.dp))
 
                 Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
@@ -149,7 +150,13 @@ fun SeriesDetailScreen(
                 SectionTitle("EPISODES")
                 Row(modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 32.dp), horizontalArrangement = Arrangement.spacedBy(18.dp)) {
                     episodesInSeason.value.forEach { episode ->
-                        TVEpisodeCard(episode = episode, fallback = series.posterUrl, onClick = { selectedEpisode.value = episode })
+                        TVEpisodeCard(
+                            episode = episode, 
+                            fallback = series.posterUrl,
+                            isWatched = false, // Connect to your database state here
+                            watchedPercentage = 0, // Connect to your progress state here
+                            onClick = { selectedEpisode.value = episode }
+                        )
                     }
                 }
 
@@ -244,12 +251,39 @@ fun TVSeasonSelectButton(season: Int, isSelected: Boolean, onClick: () -> Unit) 
 }
 
 @Composable
-fun TVEpisodeCard(episode: TVMazeEpisode, fallback: String?, onClick: () -> Unit) {
+fun TVEpisodeCard(
+    episode: TVMazeEpisode, 
+    fallback: String?, 
+    isWatched: Boolean = false, 
+    watchedPercentage: Int = 0, 
+    onClick: () -> Unit
+) {
     val source = remember { MutableInteractionSource() }
     val isFocused by source.collectIsFocusedAsState()
+    
     Column(modifier = Modifier.width(280.dp).clickable(source, null) { onClick() }) {
-        Box(modifier = Modifier.fillMaxWidth().aspectRatio(16f/9f).clip(RoundedCornerShape(12.dp)).border(if (isFocused) 4.dp else 0.dp, Color.White, RoundedCornerShape(12.dp))) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f/9f)
+                .clip(RoundedCornerShape(12.dp))
+                .border(if (isFocused) 4.dp else 0.dp, Color.White, RoundedCornerShape(12.dp))
+        ) {
             AsyncImage(model = episode.image?.medium ?: fallback, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            
+            // Progress Bar
+            if (watchedPercentage > 0) {
+                Box(modifier = Modifier.fillMaxWidth().height(6.dp).align(Alignment.BottomCenter).background(Color.Black.copy(alpha = 0.5f))) {
+                    Box(modifier = Modifier.fillMaxWidth(watchedPercentage / 100f).fillMaxHeight().background(Color(0xFF4CAF50)))
+                }
+            }
+
+            // Watched Icon
+            if (isWatched) {
+                Box(modifier = Modifier.padding(8.dp).size(28.dp).background(Color.Black.copy(alpha = 0.7f), CircleShape).align(Alignment.TopEnd), contentAlignment = Alignment.Center) {
+                    Icon(Icons.Default.CheckCircle, null, tint = Color(0xFF4CAF50), modifier = Modifier.size(22.dp))
+                }
+            }
         }
         Text("E${episode.number}: ${episode.name}", style = TVShadowStyle.copy(fontSize = 14.sp), maxLines = 1)
     }
