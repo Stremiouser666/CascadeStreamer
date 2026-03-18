@@ -31,7 +31,8 @@ import com.cascadestreamer.app.managers.TVMazeShow
 import com.cascadestreamer.app.ui.templates.EpisodeDetailsTemplate
 import kotlinx.coroutines.launch
 
-// DATA MODELS - DEFINED HERE TO PREVENT COMPILER ERRORS IN APP.KT
+// --- SHARED STYLES & DATA MODELS ---
+
 data class CastMember(
     val id: Int,
     val name: String,
@@ -73,7 +74,7 @@ fun SeriesDetailScreen(
         allEpisodes.value.filter { it.season == selectedSeason.intValue } 
     }}
     val allSeasons = remember { mutableStateOf<List<Int>>(emptyList()) }
-    
+
     val tvMazeManager = remember { TVMazeManager() }
     val scope = rememberCoroutineScope()
     val scrollState = rememberScrollState()
@@ -88,36 +89,10 @@ fun SeriesDetailScreen(
         }
     }
 
-    // ACTOR PROFILE OVERLAY
-    if (selectedCast.value != null) {
-        ActorWikiProfile(member = selectedCast.value!!, onBack = { selectedCast.value = null })
-        return
-    }
-
-    // EPISODE DETAILS OVERLAY
-    if (selectedEpisode.value != null) {
-        BackHandler { selectedEpisode.value = null }
-        Column(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-            TVBackButton(onBack = { selectedEpisode.value = null }, label = "Back to Series")
-            EpisodeDetailsTemplate(
-                episode = selectedEpisode.value!!,
-                allEpisodesInSeason = episodesInSeason.value,
-                onPlay = onPlay,
-                onWatchedToggle = {}, onFavoritesToggle = {}, onRestart = {},
-                onRemoveFromWatchlist = {},
-                onNextEpisode = {
-                    val current = selectedEpisode.value
-                    val next = episodesInSeason.value.firstOrNull { it.number != null && current != null && it.number!! > current.number!! }
-                    if (next != null) selectedEpisode.value = next
-                },
-                onEpisodeSelected = { selectedEpisode.value = it },
-                isWatched = false, isFavorite = false, watchedPercentage = 0
-            )
-        }
-        return
-    }
-
+    // BASE BOX: This holds the backdrop so it's ALWAYS visible
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+        
+        // THE MAIN PICTURE (Backdrop)
         AsyncImage(
             model = series.backdropUrl ?: series.show.image?.original,
             contentDescription = null,
@@ -125,11 +100,11 @@ fun SeriesDetailScreen(
             contentScale = ContentScale.Crop
         )
 
+        // LAYER 1: The Main Series Info
         Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
-            // SCROLL TO TOP ANCHOR
-            Spacer(modifier = Modifier.size(1.dp).focusable())
+            Spacer(modifier = Modifier.size(1.dp).focusable()) // Scroll anchor
 
-            // THE 415DP GAP (Perfected height)
+            // THE 415DP GAP (Exactly as you wanted)
             Spacer(modifier = Modifier.fillMaxWidth().height(415.dp))
 
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
@@ -185,41 +160,72 @@ fun SeriesDetailScreen(
             }
             Spacer(modifier = Modifier.height(80.dp))
         }
+
+        // LAYER 2: EPISODE DETAILS (Drawn on top of the backdrop)
+        if (selectedEpisode.value != null) {
+            EpisodeDetailsTemplate(
+                episode = selectedEpisode.value!!,
+                allEpisodesInSeason = episodesInSeason.value,
+                onPlay = onPlay,
+                onBack = { selectedEpisode.value = null },
+                onEpisodeSelected = { selectedEpisode.value = it }
+            )
+        }
+
+        // LAYER 3: ACTOR PROFILE
+        if (selectedCast.value != null) {
+            ActorWikiProfile(member = selectedCast.value!!, onBack = { selectedCast.value = null })
+        }
+
+        // LAYER 4: FULL DESCRIPTION DIALOG
+        if (showFullDescription.value) {
+            SeriesDescriptionDialog(
+                title = "Summary",
+                summary = series.show.summary ?: "",
+                onDismiss = { showFullDescription.value = false }
+            )
+        }
     }
+}
 
-    if (showFullDescription.value) {
-        var fontSize by remember { mutableStateOf(18.sp) }
-        val dialogScrollState = rememberScrollState()
-        val coroutineScope = rememberCoroutineScope()
+// --- FULL DESCRIPTION DIALOG (Matches the one in Template) ---
+@Composable
+fun SeriesDescriptionDialog(title: String, summary: String, onDismiss: () -> Unit) {
+    var fontSize by remember { mutableStateOf(18.sp) }
+    val dialogScrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
 
-        Dialog(onDismissRequest = { showFullDescription.value = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-            Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.95f)).padding(60.dp)) {
-                Column(modifier = Modifier.fillMaxWidth(0.85f).align(Alignment.Center)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("Summary", style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
-                        Spacer(modifier = Modifier.weight(1f))
-                        TVFocusButton(text = "↑", onClick = { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 500) } }, isIcon = true)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        TVFocusButton(text = "↓", onClick = { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value + 500) } }, isIcon = true)
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Text("Size: ", color = Color.Gray, fontSize = 14.sp)
-                        TVFocusButton(text = "—", onClick = { if (fontSize.value > 12) fontSize = (fontSize.value - 2).sp }, isIcon = true)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        TVFocusButton(text = "+", onClick = { if (fontSize.value < 40) fontSize = (fontSize.value + 2).sp }, isIcon = true)
-                        Spacer(modifier = Modifier.width(20.dp))
-                        TVFocusButton(text = "✕", onClick = { showFullDescription.value = false }, isIcon = true)
-                    }
-                    Spacer(modifier = Modifier.height(30.dp))
-                    Column(modifier = Modifier.verticalScroll(dialogScrollState)) {
-                        Text(text = series.show.summary?.replace("<[^>]*>".toRegex(), "") ?: "", style = TVShadowStyle.copy(fontSize = fontSize, lineHeight = (fontSize.value * 1.5).sp))
-                    }
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.95f)).padding(60.dp)) {
+            Column(modifier = Modifier.fillMaxWidth(0.85f).align(Alignment.Center)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+                    Spacer(modifier = Modifier.weight(1f))
+                    TVFocusButton(text = "↑", onClick = { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 500) } }, isIcon = true)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TVFocusButton(text = "↓", onClick = { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value + 500) } }, isIcon = true)
+                    Spacer(modifier = Modifier.width(20.dp))
+                    Text("Size: ", color = Color.Gray, fontSize = 14.sp)
+                    TVFocusButton(text = "—", onClick = { if (fontSize.value > 12) fontSize = (fontSize.value - 2).sp }, isIcon = true)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TVFocusButton(text = "+", onClick = { if (fontSize.value < 40) fontSize = (fontSize.value + 2).sp }, isIcon = true)
+                    Spacer(modifier = Modifier.width(20.dp))
+                    TVFocusButton(text = "✕", onClick = onDismiss, isIcon = true)
+                }
+                Spacer(modifier = Modifier.height(30.dp))
+                Column(modifier = Modifier.verticalScroll(dialogScrollState)) {
+                    Text(
+                        text = summary.replace("<[^>]*>".toRegex(), ""), 
+                        style = TVShadowStyle.copy(fontSize = fontSize, lineHeight = (fontSize.value * 1.5).sp)
+                    )
                 }
             }
         }
     }
 }
 
-// HELPERS
+// --- HELPER COMPONENTS ---
+
 @Composable
 fun SectionTitle(text: String) {
     Text(text = text, modifier = Modifier.padding(horizontal = 32.dp, vertical = 10.dp), style = TVShadowStyle.copy(fontSize = 14.sp, fontWeight = FontWeight.Black, color = Color.Gray))
@@ -306,7 +312,7 @@ fun TVCastCircleCard(member: CastMember, onClick: () -> Unit) {
 @Composable
 fun ActorWikiProfile(member: CastMember, onBack: () -> Unit) {
     BackHandler(enabled = true) { onBack() }
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.9f))) {
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             TVBackButton(onBack = onBack, label = "Actor Profile")
             Row(modifier = Modifier.padding(60.dp), horizontalArrangement = Arrangement.spacedBy(50.dp)) {
