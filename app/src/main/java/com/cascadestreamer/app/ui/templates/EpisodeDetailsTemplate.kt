@@ -2,28 +2,20 @@ package com.cascadestreamer.app.ui.templates
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.*
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import coil.compose.AsyncImage
 import com.cascadestreamer.app.managers.TVMazeEpisode
-import com.cascadestreamer.app.ui.* // Import helpers from main UI
+import com.cascadestreamer.app.ui.* // Uses your existing TVFocusButton and TVShadowStyle
 import kotlinx.coroutines.launch
 
 @Composable
@@ -31,50 +23,29 @@ fun EpisodeDetailsTemplate(
     episode: TVMazeEpisode,
     allEpisodesInSeason: List<TVMazeEpisode> = emptyList(),
     onPlay: () -> Unit = {},
-    onWatchedToggle: (Boolean) -> Unit = {},
-    onFavoritesToggle: (Boolean) -> Unit = {},
-    onRestart: () -> Unit = {},
-    onRemoveFromWatchlist: () -> Unit = {},
-    onNextEpisode: () -> Unit = {},
-    onEpisodeSelected: (TVMazeEpisode) -> Unit = {},
     onBack: () -> Unit = {},
-    isWatched: Boolean = false,
-    isFavorite: Boolean = false,
+    onEpisodeSelected: (TVMazeEpisode) -> Unit = {},
     watchedPercentage: Int = 0
 ) {
     val showFullDescription = remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
-    // CAPTURE HARD BACK BUTTON
+    // 1. Fix Hard Back Button
     BackHandler(enabled = true) { onBack() }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f))) {
+    // Use a Box with a slight tint so the Series Backdrop stays visible
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.3f))) {
         Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
             
+            // Exact same Header
             TVBackButton(onBack = onBack, label = "Back to Series")
 
-            // EPISODE IMAGE BOX (Matching Series Detail Layout)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(300.dp)
-                    .padding(horizontal = 32.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.Black.copy(alpha = 0.4f))
-            ) {
-                AsyncImage(
-                    model = episode.image?.original ?: episode.image?.medium,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
+            // THE 415DP GAP - This makes it match the Series Screen exactly
+            Spacer(modifier = Modifier.fillMaxWidth().height(415.dp))
 
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
                 Row(verticalAlignment = Alignment.Top) {
-                    // Buttons Column
+                    // Left Column: Main Actions
                     Column(horizontalAlignment = Alignment.Start) {
                         TVFocusButton(
                             text = if (watchedPercentage > 0) "▶ $watchedPercentage%" else "▶ Play", 
@@ -83,31 +54,16 @@ fun EpisodeDetailsTemplate(
                             focusColor = Color(0xFF00A36C)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
+                        // Row for the smaller icon-style buttons
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TVFocusButton(
-                                text = if (isWatched) "✓" else "○", 
-                                onClick = { onWatchedToggle(!isWatched) }, 
-                                isIcon = true,
-                                focusColor = Color(0xFF4CAF50)
-                            )
-                            TVFocusButton(
-                                text = if (isFavorite) "❤" else "♡", 
-                                onClick = { onFavoritesToggle(!isFavorite) }, 
-                                isIcon = true,
-                                focusColor = Color.Red
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TVFocusButton(text = "⏭", onClick = onNextEpisode, isIcon = true)
-                            TVFocusButton(text = "↺", onClick = onRestart, isIcon = true)
-                            TVFocusButton(text = "🗑", onClick = onRemoveFromWatchlist, isIcon = true, focusColor = Color(0xFFFF6B6B))
+                            TVFocusButton(text = "♡", onClick = {}, isIcon = true, focusColor = Color.Red)
+                            TVFocusButton(text = "↺", onClick = {}, isIcon = true)
                         }
                     }
 
                     Spacer(modifier = Modifier.width(28.dp))
 
-                    // Text Column
+                    // Right Column: Info & Summary (Matching Series Layout)
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "E${episode.number}: ${episode.name}",
@@ -117,24 +73,27 @@ fun EpisodeDetailsTemplate(
                             text = "Season ${episode.season}  •  ${episode.runtime ?: "N/A"} min",
                             style = TVShadowStyle.copy(fontSize = 15.sp, color = Color.Gray)
                         )
+
                         Spacer(modifier = Modifier.height(10.dp))
-                        val summaryText = episode.summary?.replace("<[^>]*>".toRegex(), "") ?: "No summary available."
+
+                        val summaryText = episode.summary?.replace("<[^>]*>".toRegex(), "") ?: "No summary."
                         Text(
                             text = summaryText,
                             style = TVShadowStyle.copy(fontSize = 15.sp, lineHeight = 22.sp),
-                            maxLines = 4,
+                            maxLines = 3, // Matches series screen
                             modifier = Modifier
-                                .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
                                 .clickable { showFullDescription.value = true }
+                                .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
                                 .padding(12.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(32.dp))
             SectionTitle("MORE FROM THIS SEASON")
             
+            // Carousel uses the same cards as the main screen for consistency
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 32.dp),
                 horizontalArrangement = Arrangement.spacedBy(18.dp)
@@ -147,10 +106,11 @@ fun EpisodeDetailsTemplate(
                     )
                 }
             }
+            
             Spacer(modifier = Modifier.height(80.dp))
         }
 
-        // FULL DESCRIPTION POPUP
+        // 2. THE POPUP (Identical to Series Screen Popup)
         if (showFullDescription.value) {
             EpisodeDescriptionDialog(
                 title = "E${episode.number}: ${episode.name}",
@@ -173,6 +133,7 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
                     Spacer(modifier = Modifier.weight(1f))
+                    // Reusing your TVFocusButton for the popup controls
                     TVFocusButton("↑", { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 500) } }, isIcon = true)
                     Spacer(modifier = Modifier.width(8.dp))
                     TVFocusButton("↓", { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value + 500) } }, isIcon = true)
