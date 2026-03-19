@@ -331,35 +331,35 @@ fun SeriesDescriptionDialog(title: String, summary: String, onDismiss: () -> Uni
     val dialogScrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
 
-    Dialog(
-        onDismissRequest = onDismiss, 
-        properties = DialogProperties(usePlatformDefaultWidth = false)
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.96f))
-                .padding(60.dp)
-        ) {
+    // Hold-to-Scroll States
+    val upInteraction = remember { MutableInteractionSource() }
+    val downInteraction = remember { MutableInteractionSource() }
+    val isUpPressed by upInteraction.collectIsPressedAsState()
+    val isDownPressed by downInteraction.collectIsPressedAsState()
+
+    // Scroll Engines
+    LaunchedEffect(isUpPressed) {
+        while (isUpPressed) {
+            dialogScrollState.animateScrollBy(-80f, tween(150, easing = FastOutSlowInEasing))
+        }
+    }
+    LaunchedEffect(isDownPressed) {
+        while (isDownPressed) {
+            dialogScrollState.animateScrollBy(80f, tween(150, easing = FastOutSlowInEasing))
+        }
+    }
+
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.96f)).padding(60.dp)) {
             Column(modifier = Modifier.fillMaxWidth(0.85f).align(Alignment.Center)) {
-                
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(text = title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
-                    
                     Spacer(modifier = Modifier.width(20.dp))
                     
-                    // SUBTLE LINE SCROLL
-                    TVFocusButton("↑", { 
-                        coroutineScope.launch { 
-                            dialogScrollState.animateScrollBy(-80f, tween(250, easing = FastOutSlowInEasing)) 
-                        } 
-                    }, isIcon = true)
+                    // Buttons with InteractionSources for Holding
+                    TVFocusButton_Holdable("↑", upInteraction, isIcon = true)
                     Spacer(modifier = Modifier.width(8.dp))
-                    TVFocusButton("↓", { 
-                        coroutineScope.launch { 
-                            dialogScrollState.animateScrollBy(80f, tween(250, easing = FastOutSlowInEasing)) 
-                        } 
-                    }, isIcon = true)
+                    TVFocusButton_Holdable("↓", downInteraction, isIcon = true)
                     
                     Spacer(modifier = Modifier.weight(1f))
                     
@@ -381,15 +381,30 @@ fun SeriesDescriptionDialog(title: String, summary: String, onDismiss: () -> Uni
                             style = TVShadowStyle.copy(fontSize = fontSize, lineHeight = (fontSize.value * 1.5).sp)
                         )
                     }
-
-                    // SOFT FADE EDGES (High performance, low opacity)
                     val fadeColor = Color.Black.copy(alpha = 0.6f)
-                    Box(modifier = Modifier.fillMaxWidth().height(20.dp).align(Alignment.TopCenter)
-                        .background(Brush.verticalGradient(listOf(fadeColor, Color.Transparent))))
-                    Box(modifier = Modifier.fillMaxWidth().height(20.dp).align(Alignment.BottomCenter)
-                        .background(Brush.verticalGradient(listOf(Color.Transparent, fadeColor))))
+                    Box(modifier = Modifier.fillMaxWidth().height(25.dp).align(Alignment.TopCenter).background(Brush.verticalGradient(listOf(fadeColor, Color.Transparent))))
+                    Box(modifier = Modifier.fillMaxWidth().height(25.dp).align(Alignment.BottomCenter).background(Brush.verticalGradient(listOf(Color.Transparent, fadeColor))))
                 }
             }
         }
+    }
+}
+
+// Small helper for holdable buttons
+@Composable
+fun TVFocusButton_Holdable(text: String, interactionSource: MutableInteractionSource, isIcon: Boolean) {
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    Button(
+        onClick = {}, // Handled by LaunchedEffect
+        interactionSource = interactionSource,
+        modifier = Modifier.height(52.dp).width(52.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isFocused) Color.White else Color.White.copy(alpha = 0.1f),
+            contentColor = if (isFocused) Color.Black else Color.White
+        ),
+        shape = RoundedCornerShape(8.dp),
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        Text(text, fontWeight = FontWeight.Black, fontSize = 18.sp)
     }
 }
