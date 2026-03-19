@@ -174,21 +174,21 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
             Column(modifier = Modifier.fillMaxWidth(0.9f).align(Alignment.Center)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+                    
                     Spacer(modifier = Modifier.width(20.dp))
 
+                    // SUBTLE LINE SCROLL
                     TVFocusButton("↑", { 
-    coroutineScope.launch { 
-        dialogScrollState.animateScrollBy(-80f, tween(200, easing = FastOutSlowInEasing)) 
-    } 
-}, isIcon = true)
+                        coroutineScope.launch { 
+                            dialogScrollState.animateScrollBy(-80f, tween(250, easing = FastOutSlowInEasing)) 
+                        } 
+                    }, isIcon = true)
                     Spacer(modifier = Modifier.width(8.dp))
                     TVFocusButton("↓", { 
-    coroutineScope.launch { 
-        // 80f is roughly 1-2 lines of text. 
-        // 200ms makes the "tick" feel instant but smooth.
-        dialogScrollState.animateScrollBy(80f, tween(200, easing = FastOutSlowInEasing)) 
-    } 
-}, isIcon = true)
+                        coroutineScope.launch { 
+                            dialogScrollState.animateScrollBy(80f, tween(250, easing = FastOutSlowInEasing)) 
+                        } 
+                    }, isIcon = true)
                     
                     Spacer(modifier = Modifier.weight(1f))
                     
@@ -207,22 +207,14 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
                     Column(modifier = Modifier.fillMaxSize().verticalScroll(dialogScrollState)) {
                         Text(
                             text = summary.replace("<[^>]*>".toRegex(), ""), 
-                            style = TVShadowStyle.copy(
-                                fontSize = fontSize, 
-                                lineHeight = (fontSize.value * 1.5).sp
-                            )
+                            style = TVShadowStyle.copy(fontSize = fontSize, lineHeight = (fontSize.value * 1.5).sp)
                         )
                     }
 
-                    // --- SOFTER FADE EDGES ---
-                    val fadeColor = Color.Black.copy(alpha = 0.7f)
-
-                    // Top Fade
-                    Box(modifier = Modifier.fillMaxWidth().height(25.dp).align(Alignment.TopCenter)
+                    val fadeColor = Color.Black.copy(alpha = 0.6f)
+                    Box(modifier = Modifier.fillMaxWidth().height(20.dp).align(Alignment.TopCenter)
                         .background(Brush.verticalGradient(listOf(fadeColor, Color.Transparent))))
-
-                    // Bottom Fade
-                    Box(modifier = Modifier.fillMaxWidth().height(25.dp).align(Alignment.BottomCenter)
+                    Box(modifier = Modifier.fillMaxWidth().height(20.dp).align(Alignment.BottomCenter)
                         .background(Brush.verticalGradient(listOf(Color.Transparent, fadeColor))))
                 }
             }
