@@ -1,7 +1,10 @@
 package com.cascadestreamer.app.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.*
@@ -16,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
@@ -187,7 +191,7 @@ fun SeriesDetailScreen(
             ActorWikiProfile(member = selectedCast.value!!, onBack = { selectedCast.value = null })
         }
 
-        // LAYER 4: SUMMARY POPUP (FIXED CONTROLS)
+        // LAYER 4: SUMMARY POPUP (FIXED CONTROLS & FADE)
         if (showFullDescription.value) {
             SeriesDescriptionDialog(
                 title = "Summary", 
@@ -320,7 +324,7 @@ fun ActorWikiProfile(member: CastMember, onBack: () -> Unit) {
     }
 }
 
-// --- POPUP DIALOG WITH RESTORED CONTROLS ---
+// --- POPUP DIALOG WITH YOUR PREFERRED CONTROLS & FADE EFFECT ---
 @Composable
 fun SeriesDescriptionDialog(title: String, summary: String, onDismiss: () -> Unit) {
     var fontSize by remember { mutableStateOf(18.sp) }
@@ -337,38 +341,65 @@ fun SeriesDescriptionDialog(title: String, summary: String, onDismiss: () -> Uni
                 .background(Color.Black.copy(alpha = 0.96f))
                 .padding(60.dp)
         ) {
-            Column(modifier = Modifier.fillMaxWidth(0.9f).align(Alignment.Center)) {
+            Column(modifier = Modifier.fillMaxWidth(0.85f).align(Alignment.Center)) {
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Black))
+                    Text(text = title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+                    
+                    Spacer(modifier = Modifier.width(20.dp))
+                    
+                    // Smooth Scroll Controls (Programmatic)
+                    TVFocusButton("↑", { 
+                        coroutineScope.launch { dialogScrollState.animateScrollBy(-250f, tween(800, easing = FastOutSlowInEasing)) } 
+                    }, isIcon = true)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    TVFocusButton("↓", { 
+                        coroutineScope.launch { dialogScrollState.animateScrollBy(250f, tween(800, easing = FastOutSlowInEasing)) } 
+                    }, isIcon = true)
                     
                     Spacer(modifier = Modifier.weight(1f))
                     
-                    // Scroll Up/Down
-                    TVFocusButton("↑", { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 600) } }, isIcon = true)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    TVFocusButton("↓", { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value + 600) } }, isIcon = true)
-                    
-                    Spacer(modifier = Modifier.width(24.dp))
-                    
-                    // Font Size - / +
+                    // Reactive Font Size Controls
                     Text("Size: ", color = Color.Gray, fontSize = 14.sp)
                     TVFocusButton("—", { if (fontSize.value > 12) fontSize = (fontSize.value - 2).sp }, isIcon = true)
                     Spacer(modifier = Modifier.width(8.dp))
-                    TVFocusButton("+", { if (fontSize.value < 44) fontSize = (fontSize.value + 2).sp }, isIcon = true)
+                    TVFocusButton("+", { if (fontSize.value < 40) fontSize = (fontSize.value + 2).sp }, isIcon = true)
                     
-                    Spacer(modifier = Modifier.width(24.dp))
+                    Spacer(modifier = Modifier.width(20.dp))
                     
-                    // Close
                     TVFocusButton("✕", onDismiss, isIcon = true, focusColor = Color.Red)
                 }
 
                 Spacer(modifier = Modifier.height(30.dp))
 
-                Box(modifier = Modifier.weight(1f).verticalScroll(dialogScrollState)) {
-                    Text(
-                        text = summary.replace("<[^>]*>".toRegex(), ""), 
-                        style = TVShadowStyle.copy(fontSize = fontSize, lineHeight = (fontSize.value * 1.6).sp)
+                // Text Container with "Fade to Black" Effect
+                Box(modifier = Modifier.weight(1f)) {
+                    Column(modifier = Modifier.fillMaxSize().verticalScroll(dialogScrollState)) {
+                        Text(
+                            text = summary.replace("<[^>]*>".toRegex(), ""), 
+                            style = TVShadowStyle.copy(
+                                fontSize = fontSize, 
+                                lineHeight = (fontSize.value * 1.5).sp
+                            )
+                        )
+                    }
+
+                    // Top Fade Gradient
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .align(Alignment.TopCenter)
+                            .background(Brush.verticalGradient(listOf(Color.Black, Color.Transparent)))
+                    )
+
+                    // Bottom Fade Gradient
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .align(Alignment.BottomCenter)
+                            .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black)))
                     )
                 }
             }
