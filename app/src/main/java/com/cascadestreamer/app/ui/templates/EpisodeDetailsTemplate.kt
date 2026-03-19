@@ -174,10 +174,8 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
             Column(modifier = Modifier.fillMaxWidth(0.9f).align(Alignment.Center)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
-                    
                     Spacer(modifier = Modifier.width(20.dp))
 
-                    // Programmatic Smooth Scroll Controls
                     TVFocusButton("↑", { 
                         coroutineScope.launch { dialogScrollState.animateScrollBy(-250f, tween(800, easing = FastOutSlowInEasing)) } 
                     }, isIcon = true)
@@ -188,20 +186,17 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
                     
                     Spacer(modifier = Modifier.weight(1f))
                     
-                    // Reactive Font Size Controls
                     Text("Size: ", color = Color.Gray, fontSize = 14.sp)
                     TVFocusButton("—", { if (fontSize.value > 12) fontSize = (fontSize.value - 2).sp }, isIcon = true)
                     Spacer(modifier = Modifier.width(8.dp))
                     TVFocusButton("+", { if (fontSize.value < 40) fontSize = (fontSize.value + 2).sp }, isIcon = true)
                     
                     Spacer(modifier = Modifier.width(24.dp))
-                    
                     TVFocusButton("✕", onDismiss, isIcon = true, focusColor = Color.Red)
                 }
 
                 Spacer(modifier = Modifier.height(30.dp))
                 
-                // Content Area with Fade Edges
                 Box(modifier = Modifier.weight(1f)) {
                     Column(modifier = Modifier.fillMaxSize().verticalScroll(dialogScrollState)) {
                         Text(
@@ -213,23 +208,16 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
                         )
                     }
 
-                    // Top Fade Gradient
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)
-                            .align(Alignment.TopCenter)
-                            .background(Brush.verticalGradient(listOf(Color.Black, Color.Transparent)))
-                    )
+                    // --- SOFTER FADE EDGES ---
+                    val fadeColor = Color.Black.copy(alpha = 0.7f)
 
-                    // Bottom Fade Gradient
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(40.dp)
-                            .align(Alignment.BottomCenter)
-                            .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black)))
-                    )
+                    // Top Fade
+                    Box(modifier = Modifier.fillMaxWidth().height(25.dp).align(Alignment.TopCenter)
+                        .background(Brush.verticalGradient(listOf(fadeColor, Color.Transparent))))
+
+                    // Bottom Fade
+                    Box(modifier = Modifier.fillMaxWidth().height(25.dp).align(Alignment.BottomCenter)
+                        .background(Brush.verticalGradient(listOf(Color.Transparent, fadeColor))))
                 }
             }
         }
