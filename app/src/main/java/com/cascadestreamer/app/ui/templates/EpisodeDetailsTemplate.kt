@@ -44,18 +44,18 @@ fun EpisodeDetailsTemplate(
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
-            
+
             TVBackButton(onBack = onBack, label = "Back to Series")
 
             // Matching the 415dp Gap for UI continuity
-            Spacer(modifier = Modifier.fillMaxWidth().height(415.dp))
+            Spacer(modifier = Modifier.fillMaxWidth().height(360.dp))
 
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
                 Row(verticalAlignment = Alignment.Top) {
-                    
+
                     // LEFT COLUMN: GRID OF ACTIONS
                     Column(modifier = Modifier.width(200.dp), horizontalAlignment = Alignment.Start) {
-                        
+
                         // 1. PLAY BUTTON WITH PROGRESS
                         TVFocusButton(
                             text = if (watchedPercentage > 0) "▶ Resume ($watchedPercentage%)" else "▶ Play",
@@ -63,9 +63,9 @@ fun EpisodeDetailsTemplate(
                             width = 200.dp,
                             focusColor = Color(0xFF00A36C)
                         )
-                        
+
                         Spacer(modifier = Modifier.height(12.dp))
-                        
+
                         // 2. ICON ACTIONS (ROW 1: Watched & Favorite)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             TVFocusButton(
@@ -88,7 +88,7 @@ fun EpisodeDetailsTemplate(
                                 }
                             }, isIcon = true)
                         }
-                        
+
                         Spacer(modifier = Modifier.height(8.dp))
 
                         // 3. ICON ACTIONS (ROW 2: Restart & Remove)
@@ -129,7 +129,7 @@ fun EpisodeDetailsTemplate(
 
             Spacer(modifier = Modifier.height(40.dp))
             SectionTitle("MORE FROM THIS SEASON")
-            
+
             Row(
                 modifier = Modifier
                     .horizontalScroll(rememberScrollState())
@@ -171,7 +171,7 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Black))
                     Spacer(modifier = Modifier.weight(1f))
-                    
+
                     // Controls
                     TVFocusButton("↑", { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 600) } }, isIcon = true)
                     Spacer(modifier = Modifier.width(8.dp))
