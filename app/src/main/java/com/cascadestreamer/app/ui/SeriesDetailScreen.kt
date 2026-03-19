@@ -326,18 +326,27 @@ fun ActorWikiProfile(member: CastMember, onBack: () -> Unit) {
 
 // --- POPUP DIALOG WITH YOUR PREFERRED CONTROLS & FADE EFFECT ---
 @Composable
-fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Unit) {
+fun SeriesDescriptionDialog(title: String, summary: String, onDismiss: () -> Unit) {
     var fontSize by remember { mutableStateOf(18.sp) }
     val dialogScrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
 
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.96f)).padding(60.dp)) {
-            Column(modifier = Modifier.fillMaxWidth(0.9f).align(Alignment.Center)) {
+    Dialog(
+        onDismissRequest = onDismiss, 
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.96f))
+                .padding(60.dp)
+        ) {
+            Column(modifier = Modifier.fillMaxWidth(0.85f).align(Alignment.Center)) {
+                
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+                    Text(text = title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
                     Spacer(modifier = Modifier.width(20.dp))
-
+                    
                     TVFocusButton("↑", { 
                         coroutineScope.launch { dialogScrollState.animateScrollBy(-250f, tween(800, easing = FastOutSlowInEasing)) } 
                     }, isIcon = true)
@@ -353,12 +362,12 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
                     Spacer(modifier = Modifier.width(8.dp))
                     TVFocusButton("+", { if (fontSize.value < 40) fontSize = (fontSize.value + 2).sp }, isIcon = true)
                     
-                    Spacer(modifier = Modifier.width(24.dp))
+                    Spacer(modifier = Modifier.width(20.dp))
                     TVFocusButton("✕", onDismiss, isIcon = true, focusColor = Color.Red)
                 }
 
                 Spacer(modifier = Modifier.height(30.dp))
-                
+
                 Box(modifier = Modifier.weight(1f)) {
                     Column(modifier = Modifier.fillMaxSize().verticalScroll(dialogScrollState)) {
                         Text(
@@ -371,7 +380,7 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
                     }
 
                     // --- SOFTER FADE EDGES ---
-                    val fadeColor = Color.Black.copy(alpha = 0.7f)
+                    val fadeColor = Color.Black.copy(alpha = 0.7f) // Semi-transparent instead of solid
 
                     // Top Fade
                     Box(modifier = Modifier.fillMaxWidth().height(25.dp).align(Alignment.TopCenter)
