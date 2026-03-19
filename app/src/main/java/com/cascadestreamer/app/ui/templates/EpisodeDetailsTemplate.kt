@@ -1,7 +1,10 @@
 package com.cascadestreamer.app.ui.templates
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
+import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -11,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -158,7 +162,7 @@ fun EpisodeDetailsTemplate(
     }
 }
 
-// --- FULL POPUP DIALOG (With Scrolling & Sizing) ---
+// --- FULL POPUP DIALOG (Updated with Smooth Scroll, Font Scale & Fade) ---
 @Composable
 fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Unit) {
     var fontSize by remember { mutableStateOf(18.sp) }
@@ -169,26 +173,62 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
         Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.96f)).padding(60.dp)) {
             Column(modifier = Modifier.fillMaxWidth(0.9f).align(Alignment.Center)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Black))
-                    Spacer(modifier = Modifier.weight(1f))
+                    Text(title, style = TVShadowStyle.copy(fontSize = 32.sp, fontWeight = FontWeight.Bold))
+                    
+                    Spacer(modifier = Modifier.width(20.dp))
 
-                    // Controls
-                    TVFocusButton("↑", { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value - 600) } }, isIcon = true)
+                    // Programmatic Smooth Scroll Controls
+                    TVFocusButton("↑", { 
+                        coroutineScope.launch { dialogScrollState.animateScrollBy(-250f, tween(800, easing = FastOutSlowInEasing)) } 
+                    }, isIcon = true)
                     Spacer(modifier = Modifier.width(8.dp))
-                    TVFocusButton("↓", { coroutineScope.launch { dialogScrollState.animateScrollTo(dialogScrollState.value + 600) } }, isIcon = true)
-                    Spacer(modifier = Modifier.width(24.dp))
+                    TVFocusButton("↓", { 
+                        coroutineScope.launch { dialogScrollState.animateScrollBy(250f, tween(800, easing = FastOutSlowInEasing)) } 
+                    }, isIcon = true)
+                    
+                    Spacer(modifier = Modifier.weight(1f))
+                    
+                    // Reactive Font Size Controls
                     Text("Size: ", color = Color.Gray, fontSize = 14.sp)
                     TVFocusButton("—", { if (fontSize.value > 12) fontSize = (fontSize.value - 2).sp }, isIcon = true)
                     Spacer(modifier = Modifier.width(8.dp))
-                    TVFocusButton("+", { if (fontSize.value < 44) fontSize = (fontSize.value + 2).sp }, isIcon = true)
+                    TVFocusButton("+", { if (fontSize.value < 40) fontSize = (fontSize.value + 2).sp }, isIcon = true)
+                    
                     Spacer(modifier = Modifier.width(24.dp))
+                    
                     TVFocusButton("✕", onDismiss, isIcon = true, focusColor = Color.Red)
                 }
+
                 Spacer(modifier = Modifier.height(30.dp))
-                Box(modifier = Modifier.weight(1f).verticalScroll(dialogScrollState)) {
-                    Text(
-                        text = summary.replace("<[^>]*>".toRegex(), ""), 
-                        style = TVShadowStyle.copy(fontSize = fontSize, lineHeight = (fontSize.value * 1.6).sp)
+                
+                // Content Area with Fade Edges
+                Box(modifier = Modifier.weight(1f)) {
+                    Column(modifier = Modifier.fillMaxSize().verticalScroll(dialogScrollState)) {
+                        Text(
+                            text = summary.replace("<[^>]*>".toRegex(), ""), 
+                            style = TVShadowStyle.copy(
+                                fontSize = fontSize, 
+                                lineHeight = (fontSize.value * 1.5).sp
+                            )
+                        )
+                    }
+
+                    // Top Fade Gradient
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .align(Alignment.TopCenter)
+                            .background(Brush.verticalGradient(listOf(Color.Black, Color.Transparent)))
+                    )
+
+                    // Bottom Fade Gradient
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                            .align(Alignment.BottomCenter)
+                            .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black)))
                     )
                 }
             }
