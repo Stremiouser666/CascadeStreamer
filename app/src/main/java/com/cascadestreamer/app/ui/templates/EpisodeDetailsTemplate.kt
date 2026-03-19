@@ -5,6 +5,9 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,7 +35,6 @@ fun EpisodeDetailsTemplate(
     onPlay: () -> Unit = {},
     onBack: () -> Unit = {},
     onEpisodeSelected: (TVMazeEpisode) -> Unit = {},
-    // Re-integrated parameters from your original code
     onWatchedToggle: (Boolean) -> Unit = {},
     onFavoritesToggle: (Boolean) -> Unit = {},
     onRestart: () -> Unit = {},
@@ -51,16 +53,12 @@ fun EpisodeDetailsTemplate(
 
             TVBackButton(onBack = onBack, label = "Back to Series")
 
-            // Matching the 415dp Gap for UI continuity
             Spacer(modifier = Modifier.fillMaxWidth().height(360.dp))
 
             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 32.dp)) {
                 Row(verticalAlignment = Alignment.Top) {
 
-                    // LEFT COLUMN: GRID OF ACTIONS
                     Column(modifier = Modifier.width(200.dp), horizontalAlignment = Alignment.Start) {
-
-                        // 1. PLAY BUTTON WITH PROGRESS
                         TVFocusButton(
                             text = if (watchedPercentage > 0) "▶ Resume ($watchedPercentage%)" else "▶ Play",
                             onClick = onPlay,
@@ -70,7 +68,6 @@ fun EpisodeDetailsTemplate(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
-                        // 2. ICON ACTIONS (ROW 1: Watched & Favorite)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             TVFocusButton(
                                 text = if (isWatched) "✓" else "○", 
@@ -84,7 +81,6 @@ fun EpisodeDetailsTemplate(
                                 isIcon = true, 
                                 focusColor = Color.Red
                             )
-                            // Next Episode Button
                             TVFocusButton(text = "⏭", onClick = {
                                 val nextIndex = allEpisodesInSeason.indexOf(episode) + 1
                                 if (nextIndex < allEpisodesInSeason.size) {
@@ -95,7 +91,6 @@ fun EpisodeDetailsTemplate(
 
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        // 3. ICON ACTIONS (ROW 2: Restart & Remove)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             TVFocusButton(text = "↺", onClick = onRestart, isIcon = true)
                             TVFocusButton(text = "🗑", onClick = onRemoveFromWatchlist, isIcon = true, focusColor = Color(0xFFFF6B6B))
@@ -104,7 +99,6 @@ fun EpisodeDetailsTemplate(
 
                     Spacer(modifier = Modifier.width(28.dp))
 
-                    // RIGHT COLUMN: EPISODE INFO
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = "E${episode.number}: ${episode.name ?: "Untitled"}",
@@ -141,7 +135,6 @@ fun EpisodeDetailsTemplate(
                 horizontalArrangement = Arrangement.spacedBy(18.dp)
             ) {
                 allEpisodesInSeason.forEach { ep ->
-                    // Note: You may want to pass specific watched data here if available
                     TVEpisodeCard(
                         episode = ep, 
                         fallback = null, 
@@ -162,12 +155,26 @@ fun EpisodeDetailsTemplate(
     }
 }
 
-// --- FULL POPUP DIALOG (Updated with Smooth Scroll, Font Scale & Fade) ---
 @Composable
 fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Unit) {
     var fontSize by remember { mutableStateOf(18.sp) }
     val dialogScrollState = rememberScrollState()
-    val coroutineScope = rememberCoroutineScope()
+
+    val upInteraction = remember { MutableInteractionSource() }
+    val downInteraction = remember { MutableInteractionSource() }
+    val isUpPressed by upInteraction.collectIsPressedAsState()
+    val isDownPressed by downInteraction.collectIsPressedAsState()
+
+    LaunchedEffect(isUpPressed) {
+        while (isUpPressed) {
+            dialogScrollState.animateScrollBy(-80f, tween(150, easing = FastOutSlowInEasing))
+        }
+    }
+    LaunchedEffect(isDownPressed) {
+        while (isDownPressed) {
+            dialogScrollState.animateScrollBy(80f, tween(150, easing = FastOutSlowInEasing))
+        }
+    }
 
     Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.96f)).padding(60.dp)) {
@@ -177,18 +184,9 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
                     
                     Spacer(modifier = Modifier.width(20.dp))
 
-                    // SUBTLE LINE SCROLL
-                    TVFocusButton("↑", { 
-                        coroutineScope.launch { 
-                            dialogScrollState.animateScrollBy(-80f, tween(250, easing = FastOutSlowInEasing)) 
-                        } 
-                    }, isIcon = true)
+                    TVFocusButton_Holdable("↑", upInteraction)
                     Spacer(modifier = Modifier.width(8.dp))
-                    TVFocusButton("↓", { 
-                        coroutineScope.launch { 
-                            dialogScrollState.animateScrollBy(80f, tween(250, easing = FastOutSlowInEasing)) 
-                        } 
-                    }, isIcon = true)
+                    TVFocusButton_Holdable("↓", downInteraction)
                     
                     Spacer(modifier = Modifier.weight(1f))
                     
@@ -198,6 +196,7 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
                     TVFocusButton("+", { if (fontSize.value < 40) fontSize = (fontSize.value + 2).sp }, isIcon = true)
                     
                     Spacer(modifier = Modifier.width(24.dp))
+                    
                     TVFocusButton("✕", onDismiss, isIcon = true, focusColor = Color.Red)
                 }
 
@@ -212,12 +211,30 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
                     }
 
                     val fadeColor = Color.Black.copy(alpha = 0.6f)
-                    Box(modifier = Modifier.fillMaxWidth().height(20.dp).align(Alignment.TopCenter)
+                    Box(modifier = Modifier.fillMaxWidth().height(25.dp).align(Alignment.TopCenter)
                         .background(Brush.verticalGradient(listOf(fadeColor, Color.Transparent))))
-                    Box(modifier = Modifier.fillMaxWidth().height(20.dp).align(Alignment.BottomCenter)
+                    Box(modifier = Modifier.fillMaxWidth().height(25.dp).align(Alignment.BottomCenter)
                         .background(Brush.verticalGradient(listOf(Color.Transparent, fadeColor))))
                 }
             }
         }
+    }
+}
+
+@Composable
+fun TVFocusButton_Holdable(text: String, interactionSource: MutableInteractionSource) {
+    val isFocused by interactionSource.collectIsFocusedAsState()
+    Button(
+        onClick = {}, 
+        interactionSource = interactionSource,
+        modifier = Modifier.height(52.dp).width(52.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = if (isFocused) Color.White else Color.White.copy(alpha = 0.1f),
+            contentColor = if (isFocused) Color.Black else Color.White
+        ),
+        shape = RoundedCornerShape(8.dp),
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        Text(text, fontWeight = FontWeight.Black, fontSize = 18.sp)
     }
 }
