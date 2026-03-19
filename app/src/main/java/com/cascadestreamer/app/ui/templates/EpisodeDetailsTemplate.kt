@@ -177,12 +177,18 @@ fun EpisodeDescriptionDialog(title: String, summary: String, onDismiss: () -> Un
                     Spacer(modifier = Modifier.width(20.dp))
 
                     TVFocusButton("↑", { 
-                        coroutineScope.launch { dialogScrollState.animateScrollBy(-250f, tween(800, easing = FastOutSlowInEasing)) } 
-                    }, isIcon = true)
+    coroutineScope.launch { 
+        dialogScrollState.animateScrollBy(-80f, tween(200, easing = FastOutSlowInEasing)) 
+    } 
+}, isIcon = true)
                     Spacer(modifier = Modifier.width(8.dp))
                     TVFocusButton("↓", { 
-                        coroutineScope.launch { dialogScrollState.animateScrollBy(250f, tween(800, easing = FastOutSlowInEasing)) } 
-                    }, isIcon = true)
+    coroutineScope.launch { 
+        // 80f is roughly 1-2 lines of text. 
+        // 200ms makes the "tick" feel instant but smooth.
+        dialogScrollState.animateScrollBy(80f, tween(200, easing = FastOutSlowInEasing)) 
+    } 
+}, isIcon = true)
                     
                     Spacer(modifier = Modifier.weight(1f))
                     
