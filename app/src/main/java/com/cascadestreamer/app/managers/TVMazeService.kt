@@ -23,9 +23,24 @@ interface TVMazeService {
 
     @GET("people/{id}")
     suspend fun getPerson(@Path("id") personId: Int): TVMazePerson
+
+    @GET("people/{id}/castcredits")
+    suspend fun getPersonCastCredits(@Path("id") personId: Int): List<TVMazeCastCredit>
 }
 
 data class TVMazeShowSearchResult(
     val score: Double,
     val show: TVMazeShow
+)
+
+data class TVMazeCastCredit(
+    val _links: TVMazeCastCreditLinks
+)
+
+data class TVMazeCastCreditLinks(
+    val show: TVMazeLink? = null
+)
+
+data class TVMazeLink(
+    val name: String? = null
 )

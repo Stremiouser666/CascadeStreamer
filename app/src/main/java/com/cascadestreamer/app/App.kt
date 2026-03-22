@@ -185,13 +185,18 @@ fun CascadeStreamerApp(
                         val tvMazeManager = TVMazeManager()
                         val backgroundUrl = tvMazeManager.getShowBackgroundImage(show.id)
                         val castList = tvMazeManager.getShowCast(show.id).map { castMember ->
-                            val personDetails = tvMazeManager.getPerson(castMember.person.id)
+                            val knownForShows = tvMazeManager.getPersonCastCredits(castMember.person.id)
+                            val knownForBio = if (knownForShows.isNotEmpty()) {
+                                "Known for: ${knownForShows.joinToString(", ")}"
+                            } else {
+                                "Member of the cast"
+                            }
                             CastMember(
                                 id = castMember.person.id,
                                 name = castMember.person.name,
                                 character = castMember.character.name,
                                 imageUrl = castMember.person.image?.medium,
-                                biography = personDetails?.biography
+                                biography = knownForBio
                             )
                         }
                         selectedSeries.value = SeriesData(

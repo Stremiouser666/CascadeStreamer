@@ -81,6 +81,18 @@ class TVMazeManager {
             }
         }
     }
+
+    suspend fun getPersonCastCredits(personId: Int): List<String> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val credits = service.getPersonCastCredits(personId)
+                credits.mapNotNull { it._links.show?.name }.distinct().take(10)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                emptyList()
+            }
+        }
+    }
 }
 
 data class TVMazeShow(
