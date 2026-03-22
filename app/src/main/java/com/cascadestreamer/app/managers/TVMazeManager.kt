@@ -70,6 +70,17 @@ class TVMazeManager {
             }
         }
     }
+
+    suspend fun getPerson(personId: Int): TVMazePerson? {
+        return withContext(Dispatchers.IO) {
+            try {
+                service.getPerson(personId)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                null
+            }
+        }
+    }
 }
 
 data class TVMazeShow(
@@ -123,7 +134,8 @@ data class TVMazeCastMember(
 data class TVMazePerson(
     val id: Int,
     val name: String,
-    val image: TVMazeImage? = null
+    val image: TVMazeImage? = null,
+    val biography: String? = null
 )
 
 data class TVMazeCharacter(

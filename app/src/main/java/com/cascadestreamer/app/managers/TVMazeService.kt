@@ -20,6 +20,9 @@ interface TVMazeService {
 
     @GET("shows/{id}/cast")
     suspend fun getShowCast(@Path("id") showId: Int): List<TVMazeCastMember>
+
+    @GET("people/{id}")
+    suspend fun getPerson(@Path("id") personId: Int): TVMazePerson
 }
 
 data class TVMazeShowSearchResult(
